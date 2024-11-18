@@ -5,11 +5,12 @@
 // @description  Fetch captcha, get token, and submit login data dynamically
 // @author       You
 // @match        *://saipa.iranecar.com/*
-// @grant        none
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
 (function () {
     'use strict';
+    const homeItemsApiUrl = 'https://saipa-func.iranecar.com/api/GetHomeItems';
 
     // Function to create the bottom container
     function createBottomContainer() {
@@ -197,5 +198,85 @@
     }
 
     // Initialize by fetching the captcha
-    fetchCaptcha();
+
+
+
+    function fetchSaipaItems() {
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: homeItemsApiUrl,
+            headers: { 'Content-Type': 'application/json' },
+            onload: function (response) {
+                const data = JSON.parse(response.responseText);
+                if (data && data.data) {
+                    displayItems(data.data);
+                } else {
+                    console.error('No data found.');
+                }
+            },
+            onerror: function () {
+                console.error('Failed to fetch Saipa items.');
+            },
+        });
+    }
+
+    // Function to display fetched items with a button for each
+    function displayItems(items) {
+        const container = document.createElement('div');
+        Object.assign(container.style, {
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            width: '400px',
+            height: '500px',
+            overflowY: 'scroll',
+            backgroundColor: '#222',
+            color: '#fff',
+            border: '1px solid #ccc',
+            padding: '10px',
+            zIndex: '1000',
+        });
+
+        let output = '<h2>Saipa Home Items</h2><ul>';
+        items.forEach((item, index) => {
+            const itemId = `item-button-${index}`; // Unique ID for the button
+            output += `
+                <li>
+                    <h3>${item.title}</h3>
+                    <img src="${item.imageUrl}" alt="${item.title}" style="width: 100%; margin-bottom: 10px;" />
+                    <p>Manufacturer: ${item.manufacturer.title}</p>
+                    <ul>
+                        ${item.spec.map(spec => `<li>${spec.title}: ${spec.description}</li>`).join('')}
+                    </ul>
+                    <button id="${itemId}" style="width: 100%; margin-top: 10px; background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
+                        Select ${item.title}
+                    </button>
+                </li>
+                <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;" />
+            `;
+        });
+        output += '</ul>';
+
+        container.innerHTML = output;
+        document.body.appendChild(container);
+
+        // Add event listeners to all buttons
+        items.forEach((item, index) => {
+            const button = document.getElementById(`item-button-${index}`);
+            button.addEventListener('click', () => handleItemButtonClick(item));
+        });
+    }
+
+    // Function to handle button clicks for each item
+    function handleItemButtonClick(item) {
+        alert(`You selected: ${item.title}\nManufacturer: ${item.manufacturer.title}`);
+        console.log('Item details:', item);
+        // Add any additional logic here, such as navigating to another page or performing an action
+    }
+
+    // Initialize script
+
+        fetchCaptcha();
+
+    fetchSaipaItems();
 })();
