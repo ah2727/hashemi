@@ -10,37 +10,52 @@
 
 (function () {
     'use strict';
+
     const homeItemsApiUrl = 'https://saipa-func.iranecar.com/api/GetHomeItems';
 
-    // Function to create the bottom container
-    function createBottomContainer() {
+    // Check if the user is logged in by reading from cookies
+    function checkLoginStatus() {
+        const cookies = document.cookie.split('; ');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.split('=');
+            if (key === 'isLoggedIn' && value === 'true') {
+                return true; // User is logged in
+            }
+        }
+        return false; // User is not logged in
+    }
+
+    // Function to create the container for login and car items
+    function createMainContainer() {
         const containerDiv = document.createElement('div');
         Object.assign(containerDiv.style, {
             position: 'fixed',
-            bottom: '0',
-            left: '0',
-            width: '100%',
-            height: '80px',
-            backgroundColor: '#333',
-            padding: '10px',
-            textAlign: 'center',
+            top: '10px',
+            left: '10px',
+            width: '400px',
+            height: '600px',  // Fixed height for the scrollable container
+            backgroundColor: '#222',
+            color: '#fff',
+            border: '1px solid #ccc',
+            padding: '15px',
             zIndex: '1000',
+            borderRadius: '8px',
+            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+            overflowY: 'auto',  // Enables vertical scrolling
         });
         document.body.appendChild(containerDiv);
-        console.log("Bottom container added.");
+        console.log("Main container added.");
+        return containerDiv;
     }
-    createBottomContainer();
+
+    const mainContainer = createMainContainer();
+    let isLoggedIn = checkLoginStatus(); // Initialize the login status from cookies
 
     // Function to fetch the captcha image and token-id
     async function fetchCaptcha() {
         try {
-            // Generate a random visitorId
             const visitorId = Math.random();
-
-            // API endpoint
             const apiUrl = `https://recaptchag.iranecar.com/api/Captcha/GetCaptchaImage2?visitorId=${visitorId}`;
-
-            // Make the request
             const response = await fetch(apiUrl, { method: 'GET' });
 
             if (!response.ok) {
@@ -48,15 +63,11 @@
                 return;
             }
 
-            // Get token-id from response headers
             const tokenId = response.headers.get('token-id');
             console.log('Retrieved token-id:', tokenId);
 
-            // Get the captcha image as a blob
             const blob = await response.blob();
             const imageUrl = URL.createObjectURL(blob);
-
-            // Update the captcha display
             updateCaptcha(imageUrl, tokenId);
 
         } catch (error) {
@@ -66,32 +77,13 @@
 
     // Function to create or update the captcha display
     function updateCaptcha(imageUrl, tokenId) {
-        // Find the container or create it
-        let container = document.getElementById('captcha-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'captcha-container';
-            container.style.position = 'fixed';
-            container.style.top = '10px';
-            container.style.left = '10px';
-            container.style.zIndex = '1000';
-            container.style.width = '400px';
-            container.style.height = 'auto';
-            container.style.backgroundColor = '#222';
-            container.style.color = '#fff';
-            container.style.border = '1px solid #ccc';
-            container.style.padding = '15px';
-            container.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.2)';
-            container.style.display = 'flex';
-            container.style.flexDirection = 'column';
-            container.style.alignItems = 'center';
-            container.style.justifyContent = 'center';
-            container.style.borderRadius = '8px';
-            document.body.appendChild(container);
+        if (isLoggedIn) {
+            mainContainer.innerHTML = '<p>You are already logged in!</p>';
+            return;
         }
 
-        // Clear the container
-        container.innerHTML = '';
+        // Clear existing content in main container
+        mainContainer.innerHTML = '';
 
         // Add input fields and buttons dynamically
         const fields = [
@@ -113,7 +105,7 @@
             input.style.borderRadius = '5px';
             input.style.boxSizing = 'border-box';
             input.id = field.id;
-            container.appendChild(input);
+            mainContainer.appendChild(input);
         });
 
         // Add captcha image
@@ -124,7 +116,7 @@
         img.style.marginBottom = '10px';
         img.style.border = '1px solid #ccc';
         img.style.borderRadius = '5px';
-        container.appendChild(img);
+        mainContainer.appendChild(img);
 
         // Add refresh button
         const refreshButton = document.createElement('button');
@@ -138,7 +130,7 @@
         refreshButton.style.borderRadius = '5px';
         refreshButton.style.cursor = 'pointer';
         refreshButton.addEventListener('click', fetchCaptcha);
-        container.appendChild(refreshButton);
+        mainContainer.appendChild(refreshButton);
 
         // Add submit button
         const submitButton = document.createElement('button');
@@ -163,7 +155,6 @@
                 return;
             }
 
-            // Send data to SignIn API
             const requestData = {
                 nationalCode: usernameValue,
                 password: passwordValue,
@@ -186,6 +177,10 @@
 
                 if (response.ok) {
                     alert('Login successful!');
+                    // Save login data in cookies
+                    saveLoginDataToCookies(responseData);
+                    mainContainer.innerHTML = '<p>You are now logged in!</p>';
+                    fetchSaipaItems(); // Fetch items after successful login
                 } else {
                     alert(`Login failed: ${responseData.message}`);
                 }
@@ -194,14 +189,28 @@
                 alert('An error occurred while submitting data.');
             }
         });
-        container.appendChild(submitButton);
+        mainContainer.appendChild(submitButton);
     }
 
-    // Initialize by fetching the captcha
+    // Function to save login data in cookies
+    function saveLoginDataToCookies(data) {
+        const expires = new Date(Date.now() + 60 * 60 * 1000).toUTCString(); // 1 hour expiry
+        // Save customer data, tokens, and expiration time
+        document.cookie = `isLoggedIn=true; path=/; expires=${expires}`;
+        document.cookie = `token=${data.data.token.token}; path=/; expires=${expires}`;
+        document.cookie = `oldVersionToken=${data.data.token.oldVersionToken}; path=/; expires=${expires}`;
+        document.cookie = `customerFirstName=${encodeURIComponent(data.data.customer.firstName)}; path=/; expires=${expires}`;
+        document.cookie = `customerLastName=${encodeURIComponent(data.data.customer.lastName)}; path=/; expires=${expires}`;
+        document.cookie = `customerNationalCode=${data.data.customer.nationalCode}; path=/; expires=${expires}`;
+        document.cookie = `expireTime=${data.data.token.expireTime}; path=/; expires=${expires}`;
+    }
 
-
-
+    // Fetch the Saipa items
     function fetchSaipaItems() {
+        if (!isLoggedIn) {
+            return; // Don't fetch items if the user is not logged in
+        }
+
         GM_xmlhttpRequest({
             method: 'GET',
             url: homeItemsApiUrl,
@@ -222,21 +231,6 @@
 
     // Function to display fetched items with a button for each
     function displayItems(items) {
-        const container = document.createElement('div');
-        Object.assign(container.style, {
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            width: '400px',
-            height: '500px',
-            overflowY: 'scroll',
-            backgroundColor: '#222',
-            color: '#fff',
-            border: '1px solid #ccc',
-            padding: '10px',
-            zIndex: '1000',
-        });
-
         let output = '<h2>Saipa Home Items</h2><ul>';
         items.forEach((item, index) => {
             const itemId = `item-button-${index}`; // Unique ID for the button
@@ -257,8 +251,7 @@
         });
         output += '</ul>';
 
-        container.innerHTML = output;
-        document.body.appendChild(container);
+        mainContainer.innerHTML += output;  // Append to main container
 
         // Add event listeners to all buttons
         items.forEach((item, index) => {
@@ -267,16 +260,19 @@
         });
     }
 
-    // Function to handle button clicks for each item
+    // Function to handle button clicks for each item and save car model ID in cookie
     function handleItemButtonClick(item) {
         alert(`You selected: ${item.title}\nManufacturer: ${item.manufacturer.title}`);
         console.log('Item details:', item);
+
+        // Save the selected car model ID in a cookie
+        document.cookie = `selectedCarModelId=${item.id}; path=/; expires=${new Date(Date.now() + 60 * 60 * 1000).toUTCString()}`;
+
+        console.log('Car Model ID saved to cookie:', item.id);
         // Add any additional logic here, such as navigating to another page or performing an action
     }
 
     // Initialize script
-
-        fetchCaptcha();
-
+    fetchCaptcha();
     fetchSaipaItems();
 })();
