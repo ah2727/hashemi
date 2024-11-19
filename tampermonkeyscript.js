@@ -12,18 +12,10 @@
     'use strict';
 
     const homeItemsApiUrl = 'https://saipa-func.iranecar.com/api/GetHomeItems';
+    const insurersApiUrl = 'https://sapi.iranecar.com/api/v1/Insurer/GetInsurers';
+    const circulationApiUrl = 'https://sapi.iranecar.com/api/v1/Product/GetCirculationData'; // URL for circulation data
 
-    // Check if the user is logged in by reading from cookies
-    function checkLoginStatus() {
-        const cookies = document.cookie.split('; ');
-        for (let cookie of cookies) {
-            const [key, value] = cookie.split('=');
-            if (key === 'isLoggedIn' && value === 'true') {
-                return true; // User is logged in
-            }
-        }
-        return false; // User is not logged in
-    }
+    const mainContainer = createMainContainer();
 
     // Function to create the container for login and car items
     function createMainContainer() {
@@ -48,8 +40,19 @@
         return containerDiv;
     }
 
-    const mainContainer = createMainContainer();
     let isLoggedIn = checkLoginStatus(); // Initialize the login status from cookies
+
+    // Check if the user is logged in by reading from cookies
+    function checkLoginStatus() {
+        const cookies = document.cookie.split('; ');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.split('=');
+            if (key === 'isLoggedIn' && value === 'true') {
+                return true; // User is logged in
+            }
+        }
+        return false; // User is not logged in
+    }
 
     // Function to fetch the captcha image and token-id
     async function fetchCaptcha() {
@@ -151,7 +154,6 @@
 
             // Validate inputs
             if (!usernameValue || !passwordValue || !captchaValue) {
-                alert('All fields are required!');
                 return;
             }
 
@@ -176,7 +178,6 @@
                 console.log('Response:', responseData);
 
                 if (response.ok) {
-                    alert('Login successful!');
                     // Save login data in cookies
                     saveLoginDataToCookies(responseData);
                     mainContainer.innerHTML = '<p>You are now logged in!</p>';
@@ -186,7 +187,6 @@
                 }
             } catch (error) {
                 console.error('Error submitting data:', error);
-                alert('An error occurred while submitting data.');
             }
         });
         mainContainer.appendChild(submitButton);
@@ -262,14 +262,120 @@
 
     // Function to handle button clicks for each item and save car model ID in cookie
     function handleItemButtonClick(item) {
-        alert(`You selected: ${item.title}\nManufacturer: ${item.manufacturer.title}`);
         console.log('Item details:', item);
 
         // Save the selected car model ID in a cookie
         document.cookie = `selectedCarModelId=${item.id}; path=/; expires=${new Date(Date.now() + 60 * 60 * 1000).toUTCString()}`;
-
         console.log('Car Model ID saved to cookie:', item.id);
-        // Add any additional logic here, such as navigating to another page or performing an action
+
+        // Fetch insurers and circulation data
+        fetchInsurers();
+        fetchCirculationData(item.id);
+
+        // Clear the main container and show car details
+        mainContainer.innerHTML = '';
+
+        // Create a new section to display the car details
+        const carDetailsDiv = document.createElement('div');
+        carDetailsDiv.style.backgroundColor = '#333';
+        carDetailsDiv.style.color = '#fff';
+        carDetailsDiv.style.padding = '15px';
+        carDetailsDiv.style.borderRadius = '8px';
+        carDetailsDiv.style.marginBottom = '20px';
+
+        // Add car details to the section
+        carDetailsDiv.innerHTML = `
+            <h2>${item.title}</h2>
+            <img src="${item.imageUrl}" alt="${item.title}" style="width: 100%; margin-bottom: 10px;" />
+            <p><strong>Manufacturer:</strong> ${item.manufacturer.title}</p>
+            <ul>
+                ${item.spec.map(spec => `<li><strong>${spec.title}:</strong> ${spec.description}</li>`).join('')}
+            </ul>
+            <button id="backButton" style="background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%;">
+                Go Back to Car List
+            </button>
+        `;
+
+        // Append the car details to the main container
+        mainContainer.appendChild(carDetailsDiv);
+
+        // Add an event listener to the back button
+        const backButton = document.getElementById('backButton');
+        backButton.addEventListener('click', () => {
+            // When the "Go Back" button is clicked, reload the car list
+            fetchSaipaItems();
+        });
+    }
+
+    // Fetch insurers and display them in a dropdown
+    async function fetchInsurers() {
+        try {
+            const response = await fetch(insurersApiUrl);
+            const data = await response.json();
+
+            if (data.status === 200 && data.data.length > 0) {
+                // Create the insurer dropdown
+                const dropdown = document.createElement('select');
+                dropdown.style.width = '100%';
+                dropdown.style.height = '40px';
+                dropdown.style.fontSize = '16px';
+                dropdown.style.marginBottom = '10px';
+                dropdown.id = 'insurer-select';
+
+                // Add a default "Select Insurer" option
+                const defaultOption = document.createElement('option');
+                defaultOption.textContent = 'Select Insurer';
+                dropdown.appendChild(defaultOption);
+
+                // Populate dropdown with insurers
+                data.data.forEach(insurer => {
+                    const option = document.createElement('option');
+                    option.value = insurer.id;
+                    option.textContent = insurer.title;
+                    dropdown.appendChild(option);
+                });
+
+                // Append dropdown to the main container
+                mainContainer.innerHTML += '<h2>Select Insurer</h2>';
+                mainContainer.appendChild(dropdown);
+            } else {
+                console.error('Failed to fetch insurers or no data available');
+            }
+        } catch (error) {
+            console.error('Error fetching insurers:', error);
+        }
+    }
+
+    // Fetch circulation data for the selected car
+    async function fetchCirculationData(carModelId) {
+        try {
+            const url = `${circulationApiUrl}?carModelId=${carModelId}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data && data.data[0].title) {
+                // Display options or data related to circulation
+                const optionsDiv = document.createElement('div');
+                optionsDiv.style.backgroundColor = '#444';
+                optionsDiv.style.color = '#fff';
+                optionsDiv.style.padding = '15px';
+                optionsDiv.style.marginTop = '20px';
+                optionsDiv.innerHTML = `<h3>Available Options for ${data.title}</h3>`;
+
+                // Example of showing options
+                const optionsList = document.createElement('ul');
+                data.data[0].options.forEach(option => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${option.title} - Price: ${option.price}`;
+                    optionsList.appendChild(listItem);
+                });
+
+                optionsDiv.appendChild(optionsList);
+                mainContainer.appendChild(optionsDiv);
+            }
+        } catch (error) {
+            console.error('Error fetching circulation data:', error);
+        }
     }
 
     // Initialize script
