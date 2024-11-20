@@ -14,7 +14,7 @@
     const homeItemsApiUrl = 'https://saipa-func.iranecar.com/api/GetHomeItems';
     const insurersApiUrl = 'https://sapi.iranecar.com/api/v1/Insurer/GetInsurers';
     const circulationApiUrl = 'https://sapi.iranecar.com/api/v1/Product/GetCirculationData'; // URL for circulation data
-
+    const circulationbranchprovince = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchProvince'
     const mainContainer = createMainContainer();
 
     // Function to create the container for login and car items
@@ -24,7 +24,7 @@
             position: 'fixed',
             top: '10px',
             left: '10px',
-            width: '400px',
+            width: '90%',
             height: '600px',  // Fixed height for the scrollable container
             backgroundColor: '#222',
             color: '#fff',
@@ -231,7 +231,8 @@
 
     // Function to display fetched items with a button for each
     function displayItems(items) {
-        let output = '<h2>Saipa Home Items</h2><ul>';
+
+        let output = '<div style="width:20%"><h2>Saipa Home Items</h2><ul>';
         items.forEach((item, index) => {
             const itemId = `item-button-${index}`; // Unique ID for the button
             output += `
@@ -242,14 +243,14 @@
                     <ul>
                         ${item.spec.map(spec => `<li>${spec.title}: ${spec.description}</li>`).join('')}
                     </ul>
-                    <button id="${itemId}" style="width: 100%; margin-top: 10px; background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
+                    <button id="${itemId}" style="width:  100%; margin-top: 10px; background-color: #007bff; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">
                         Select ${item.title}
                     </button>
                 </li>
                 <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;" />
             `;
         });
-        output += '</ul>';
+        output += '</ul><div>';
 
         mainContainer.innerHTML += output;  // Append to main container
 
@@ -279,6 +280,7 @@
         const carDetailsDiv = document.createElement('div');
         carDetailsDiv.style.backgroundColor = '#333';
         carDetailsDiv.style.color = '#fff';
+        carDetailsDiv.style.width="20%";
         carDetailsDiv.style.padding = '15px';
         carDetailsDiv.style.borderRadius = '8px';
         carDetailsDiv.style.marginBottom = '20px';
@@ -316,7 +318,7 @@
             if (data.status === 200 && data.data.length > 0) {
                 // Create the insurer dropdown
                 const dropdown = document.createElement('select');
-                dropdown.style.width = '100%';
+                dropdown.style.width = '20%';
                 dropdown.style.height = '40px';
                 dropdown.style.fontSize = '16px';
                 dropdown.style.marginBottom = '10px';
@@ -358,27 +360,40 @@
                 const optionsDiv = document.createElement('div');
                 optionsDiv.style.backgroundColor = '#444';
                 optionsDiv.style.color = '#fff';
+                optionsDiv.style.width="20%";
                 optionsDiv.style.padding = '15px';
                 optionsDiv.style.marginTop = '20px';
                 optionsDiv.innerHTML = `<h3>Available Options for ${data.title}</h3>`;
+                console.log(data);
 
                 // Example of showing options
-                const optionsList = document.createElement('ul');
+                const optionsList = document.createElement('select');
+                optionsList.style.width="100%";
                 data.data[0].options.forEach(option => {
-                    const listItem = document.createElement('li');
+                    const listItem = document.createElement('option');
                     listItem.textContent = `${option.title} - Price: ${option.price}`;
+                    listItem.value = `${option.id}`
                     optionsList.appendChild(listItem);
                 });
-
                 optionsDiv.appendChild(optionsList);
                 mainContainer.appendChild(optionsDiv);
-            }
-        } catch (error) {
-            console.error('Error fetching circulation data:', error);
-        }
-    }
 
-    // Initialize script
-    fetchCaptcha();
-    fetchSaipaItems();
+                const responseprovince = await fetch(circulationbranchprovince,{
+                                       method: 'POST',
+                                       headers: {
+                                       'Content-Type': 'application/json',
+                                       },
+                    body: JSON.stringify({"circulationId":`${data.data[0].id}`}),
+                })
+                const resprovince =await responseprovince.json();
+                console.log(resprovince);
+        }
+    } catch (error) {
+        console.error('Error fetching circulation data:', error);
+    }
+}
+
+ // Initialize script
+ fetchCaptcha();
+fetchSaipaItems();
 })();
