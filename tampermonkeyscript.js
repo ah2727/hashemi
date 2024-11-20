@@ -21,6 +21,7 @@
     function createMainContainer() {
         const containerDiv = document.createElement('div');
         Object.assign(containerDiv.style, {
+            display:'flex',
             position: 'fixed',
             top: '10px',
             left: '10px',
@@ -31,7 +32,7 @@
             border: '1px solid #ccc',
             padding: '15px',
             zIndex: '1000',
-            borderRadius: '8px',
+            borderRadius: '8px',a
             boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
             overflowY: 'auto',  // Enables vertical scrolling
         });
@@ -338,7 +339,7 @@
                 });
 
                 // Append dropdown to the main container
-                mainContainer.innerHTML += '<h2>Select Insurer</h2>';
+                mainContainer.innerHTML += '<h2 style="width:20%">Select Insurer</h2>';
                 mainContainer.appendChild(dropdown);
             } else {
                 console.error('Failed to fetch insurers or no data available');
@@ -378,22 +379,47 @@
                 optionsDiv.appendChild(optionsList);
                 mainContainer.appendChild(optionsDiv);
 
-                const responseprovince = await fetch(circulationbranchprovince,{
-                                       method: 'POST',
-                                       headers: {
-                                       'Content-Type': 'application/json',
-                                       },
-                    body: JSON.stringify({"circulationId":`${data.data[0].id}`}),
-                })
-                const resprovince =await responseprovince.json();
-                console.log(resprovince);
-        }
-    } catch (error) {
-        console.error('Error fetching circulation data:', error);
-    }
-}
+                const responseprovince = await fetch(circulationbranchprovince, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ "circulationId": `${data.data[0].id}` }),
+                });
 
- // Initialize script
- fetchCaptcha();
-fetchSaipaItems();
+                const resprovince = await responseprovince.json();
+                console.log(resprovince);
+
+                // Create a div for province
+                const provincediv = document.createElement("div");
+                provincediv.style.backgroundColor = '#444';
+
+                // Create a select element
+                const provinceSelect = document.createElement("select");
+
+                // Loop through each province item in the response
+                resprovince.forEach(province => {
+                    // Create an option element for each province
+                    const option = document.createElement("option");
+                    option.value = province.id; // Assuming each province has an 'id' and 'name' property
+                    option.textContent = province.title; // Adjust this if the actual property name is different
+
+                    // Append the option to the select element
+                    provinceSelect.appendChild(option);
+                });
+
+                // Append the select element to the provincediv
+                provincediv.appendChild(provinceSelect);
+
+                // Finally, append the provincediv to the body or another container element in the DOM
+                mainContainer.appendChild(provincediv);
+            }
+        } catch (error) {
+            console.error('Error fetching circulation data:', error);
+        }
+    }
+
+    // Initialize script
+    fetchCaptcha();
+    fetchSaipaItems();
 })();
