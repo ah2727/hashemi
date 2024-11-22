@@ -14,9 +14,10 @@
     const homeItemsApiUrl = 'https://saipa-func.iranecar.com/api/GetHomeItems';
     const insurersApiUrl = 'https://sapi.iranecar.com/api/v1/Insurer/GetInsurers';
     const circulationApiUrl = 'https://sapi.iranecar.com/api/v1/Product/GetCirculationData'; // URL for circulation data
-    const circulationbranchprovince = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchProvince'
-    const circulationbranchcity = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchProvinceCity'
-    const circilationbranchcityget = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchCity'
+    const circulationbranchprovince = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchProvince';
+    const circulationbranchcity = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchProvinceCity';
+    const circilationbranchcityget = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchCity';
+    const register = 'https://sapi.iranecar.com/api/v1/order/register';
     const mainContainer = createMainContainer();
 
     // Function to create the container for login and car items
@@ -539,13 +540,26 @@
                 });
 
                 // Loop through each province item in the response and create an option
-
+                const submitButtonStepTWo = document.createElement('button');
+                submitButtonStepTWo.textContent = 'Submit';
+                submitButtonStepTWo.style.height = '40px';
+                submitButtonStepTWo.style.width = '20%';
+                submitButtonStepTWo.style.position = 'absolute';
+                submitButtonStepTWo.style.bottom="30px";
+                submitButtonStepTWo.style.right ="40%";
+                submitButtonStepTWo.style.backgroundColor = '#28a745';
+                submitButtonStepTWo.style.color = '#fff';
+                submitButtonStepTWo.style.fontSize = '16px';
+                submitButtonStepTWo.style.border = 'none';
+                submitButtonStepTWo.style.borderRadius = '5px';
+                submitButtonStepTWo.style.cursor = 'pointer';
+                submitButtonStepTWo.style.marginTop = '10px';
 
                 // Append the province select to the province div
                 provincediv.appendChild(provinceSelect);
-
                 // Append the provincediv to the step container
                 steptwodiv.appendChild(provincediv);
+                steptwodiv.appendChild(submitButtonStepTWo);
 
                 // Finally, append the step div to the main container
                 mainContainer.appendChild(steptwodiv);
