@@ -16,6 +16,7 @@
     const circulationApiUrl = 'https://sapi.iranecar.com/api/v1/Product/GetCirculationData'; // URL for circulation data
     const circulationbranchprovince = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchProvince'
     const circulationbranchcity = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchProvinceCity'
+    const circilationbranchcityget = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchCity'
     const mainContainer = createMainContainer();
 
     // Function to create the container for login and car items
@@ -419,7 +420,12 @@
                 // Create the province select element
                 const provinceSelect = document.createElement("select");
                 provinceSelect.style.width = "100%";
-
+                resprovince.forEach(province => {
+                    const option = document.createElement("option");
+                    option.value = province.id;  // Assuming each province has an 'id' property
+                    option.textContent = province.title;  // Assuming each province has a 'title' property
+                    provinceSelect.appendChild(option);
+                });
                 // Add event listener to handle the province selection
                 provinceSelect.addEventListener("change", async function (event) {
                     try {
@@ -451,7 +457,6 @@
                             citySelect = document.createElement("select");
                             citySelect.id = 'citySelect';
                             citySelect.style.width = "100%";
-                            citySelect.style.marginTop = "15px";
 
                             // Add the citySelect to the container
                             const cityDiv = document.createElement('div');
@@ -459,7 +464,6 @@
                             cityDiv.style.color = '#fff';
                             cityDiv.style.width = "100%";
                             cityDiv.style.padding = '15px';
-                            cityDiv.style.marginTop = '20px';
                             cityDiv.appendChild(citySelect);
 
                             // Append the cityDiv to the steptwodiv container
@@ -469,41 +473,73 @@
                             citySelect.innerHTML = '';
                         }
 
-                        // Assuming responseData is an array of city objects
+                        // Add new city options from responseData
                         responseData.forEach(city => {
-                            // Check if the city already exists in the select options
-                            let existingOption = Array.from(citySelect.options).find(option => option.value === city.id);
-
-                            if (existingOption) {
-                                // If the option already exists, update the text content
-                                existingOption.textContent = `City: ${city.title}`;
-                                // Mark the existing option as selected
-                                existingOption.selected = true;
-                            } else {
-                                // If it does not exist, create a new option
-                                const newOption = document.createElement("option");
-                                newOption.value = city.id;  // Assuming responseData has an 'id' property for each city
-                                newOption.textContent = `City: ${city.title}`;  // Assuming responseData has a 'title' property for each city
-                                citySelect.appendChild(newOption);
-                                // Mark the new option as selected
-                                newOption.selected = true;
-                            }
+                            const newOption = document.createElement("option");
+                            newOption.value = city.code;  // Assuming responseData has a 'code' property for each city
+                            newOption.textContent = `City: ${city.title}`;  // Assuming responseData has a 'title' property for each city
+                            citySelect.appendChild(newOption);
                         });
 
-                        // Update the container div to show changes
+                        // Add an event listener to log the selected city ID and fetch branches
+                        citySelect.addEventListener("change", async function (event) {
+                            const selectedCityId = event.target.value;
+                            console.log("Selected city ID:", selectedCityId);
 
+                            const requestDatacityBranch = {
+                                cityCode: selectedCityId,
+                                circulationId: data.data[0].id
+                            };
+
+                            // Send the POST request to fetch city branch data
+                            const responsecitybranch = await fetch(circilationbranchcityget, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(requestDatacityBranch),
+                            });
+
+                            const responseCityBranchData = await responsecitybranch.json();
+
+                            // Create or select the city branch dropdown
+                            let cityBranchSelect = document.querySelector('#cityBranchSelect');
+                            if (!cityBranchSelect) {
+                                // If the city branch select element does not exist, create it
+                                cityBranchSelect = document.createElement("select");
+                                cityBranchSelect.id = 'cityBranchSelect';
+                                cityBranchSelect.style.width = "100%";
+
+                                // Add the cityBranchSelect to the container
+                                const cityBranchDiv = document.createElement('div');
+                                cityBranchDiv.style.backgroundColor = '#444';
+                                cityBranchDiv.style.color = '#fff';
+                                cityBranchDiv.style.width = "100%";
+                                cityBranchDiv.style.padding = '15px';
+                                cityBranchDiv.appendChild(cityBranchSelect);
+
+                                // Append the cityBranchDiv to the steptwodiv container
+                                steptwodiv.appendChild(cityBranchDiv);
+                            } else {
+                                // Clear existing options if the cityBranchSelect already exists
+                                cityBranchSelect.innerHTML = '';
+                            }
+
+                            // Add new branch options from responseCityBranchData
+                            responseCityBranchData.forEach(branch => {
+                                const newBranchOption = document.createElement("option");
+                                newBranchOption.value = branch.id;  // Assuming responseCityBranchData has an 'id' property for each branch
+                                newBranchOption.textContent = `Branch: ${branch.title}`;  // Assuming responseCityBranchData has a 'title' property for each branch
+                                cityBranchSelect.appendChild(newBranchOption);
+                            });
+                        });
                     } catch (error) {
                         console.error('Error fetching city data:', error);
                     }
                 });
 
                 // Loop through each province item in the response and create an option
-                resprovince.forEach(province => {
-                    const option = document.createElement("option");
-                    option.value = province.id;  // Assuming each province has an 'id' property
-                    option.textContent = province.title;  // Assuming each province has a 'title' property
-                    provinceSelect.appendChild(option);
-                });
+
 
                 // Append the province select to the province div
                 provincediv.appendChild(provinceSelect);
@@ -518,7 +554,6 @@
             console.error('Error fetching circulation data:', error);
         }
     }
-
 
     // Initialize script
     fetchCaptcha();
