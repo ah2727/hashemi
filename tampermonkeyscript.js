@@ -554,7 +554,9 @@
                 submitButtonStepTWo.style.borderRadius = '5px';
                 submitButtonStepTWo.style.cursor = 'pointer';
                 submitButtonStepTWo.style.marginTop = '10px';
-
+                submitButtonStepTWo.addEventListener("click",()=>{
+                    steptwodiv.innerHTML="";
+                })
                 // Append the province select to the province div
                 provincediv.appendChild(provinceSelect);
                 // Append the provincediv to the step container
@@ -568,7 +570,8 @@
             console.error('Error fetching circulation data:', error);
         }
     }
-
+async function registercar(){
+}
     // Initialize script
     fetchCaptcha();
     fetchSaipaItems();
