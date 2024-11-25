@@ -391,6 +391,8 @@
             const url = `${circulationApiUrl}?carModelId=${carModelId}`;
             const response = await fetch(url);
             const data = await response.json();
+            let selectedBranchId;
+            let defaultBranchId;
 
             if (data && data.data[0].title) {
                 // Create a div for options
@@ -565,65 +567,27 @@
                             }
 
                             // Add new branch options from responseCityBranchData
-                            responseCityBranchData.forEach(branch => {
+                            responseCityBranchData.forEach((branch, index) => {
                                 const newBranchOption = document.createElement("option");
-                                newBranchOption.value = `${branch.code}-${branch.id}`;  // Assuming responseCityBranchData has an 'id' property for each branch
-                                newBranchOption.textContent = `Branch: ${branch.title}`;  // Assuming responseCityBranchData has a 'title' property for each branch
+                                newBranchOption.value = `${branch.code}-${branch.id}`; // Combine branch code and ID
+                                newBranchOption.textContent = `Branch: ${branch.title}`; // Display branch title
+
+                                // Check if this branch should be the default
+                                if (index === 0) { // Use the first branch as default (adjust condition if needed)
+                                    defaultBranchId = newBranchOption.value;
+                                }
+
                                 cityBranchSelect.appendChild(newBranchOption);
                             });
+                            if (defaultBranchId) {
+                                cityBranchSelect.value = defaultBranchId; // Set the dropdown to the default option
+                                selectedBranchId = defaultBranchId; // Update the selectedBranchId variable
+                            }
 
+                            // Add the event listener for change
                             cityBranchSelect.addEventListener("change", async function (event) {
-
-
-                                const captcha2 = await fetchCaptchasstep2();
-                                const imgcaptchastep3 = document.createElement('img');
-                                imgcaptchastep3.src = captcha2.image;
-                                imgcaptchastep3.alt = 'Captcha';
-                                imgcaptchastep3.style.height = '80px';
-                                imgcaptchastep3.style.marginBottom = '10px';
-                                imgcaptchastep3.style.border = '1px solid #ccc';
-                                imgcaptchastep3.style.borderRadius = '5px';
-
-                                const inputCaptcha = document.createElement('input');
-                                inputCaptcha.type = "number";
-                                inputCaptcha.placeholder = "enter captcha";
-                                inputCaptcha.style.height = '40px';
-                                inputCaptcha.style.width = '100%';
-                                inputCaptcha.style.marginBottom = '10px';
-                                inputCaptcha.style.padding = '10px';
-                                inputCaptcha.style.fontSize = '16px';
-                                inputCaptcha.style.border = '1px solid #ccc';
-                                inputCaptcha.style.borderRadius = '5px';
-                                inputCaptcha.style.boxSizing = 'border-box';
-                                inputCaptcha.name = "captcha2";
-                                const submitButtonStepTWo = document.createElement('button');
-                                submitButtonStepTWo.textContent = 'Submit';
-                                submitButtonStepTWo.style.height = '40px';
-                                submitButtonStepTWo.style.width = '20%';
-                                submitButtonStepTWo.style.position = 'absolute';
-                                submitButtonStepTWo.style.bottom="30px";
-                                submitButtonStepTWo.style.right ="40%";
-                                submitButtonStepTWo.style.backgroundColor = '#28a745';
-                                submitButtonStepTWo.style.color = '#fff';
-                                submitButtonStepTWo.style.fontSize = '16px';
-                                submitButtonStepTWo.style.border = 'none';
-                                submitButtonStepTWo.style.borderRadius = '5px';
-                                submitButtonStepTWo.style.cursor = 'pointer';
-                                submitButtonStepTWo.style.marginTop = '10px';
-                                steptwodiv.appendChild(submitButtonStepTWo);
-
-                                divstep3.appendChild(imgcaptchastep3);
-                                divstep3.appendChild(inputCaptcha);
-                                // Append the provincediv to the step container
-
-                                submitButtonStepTWo.addEventListener("click",()=>{
-                                    steptwodiv.innerHTML="";
-                                    const selectedBranchId = event.target.value;
-                                    const splitedbranchCodeandId = selectedBranchId.split("-")
-                                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],);
-
-
-                                })
+                                selectedBranchId = event.target.value;
+                                console.log("Selected Branch ID:", selectedBranchId);
                             });
                         });
                     } catch (error) {
@@ -633,6 +597,54 @@
 
 
 
+                const captcha2 = await fetchCaptchasstep2();
+                const imgcaptchastep3 = document.createElement('img');
+                imgcaptchastep3.src = captcha2.image;
+                imgcaptchastep3.alt = 'Captcha';
+                imgcaptchastep3.style.height = '80px';
+                imgcaptchastep3.style.marginBottom = '10px';
+                imgcaptchastep3.style.border = '1px solid #ccc';
+                imgcaptchastep3.style.borderRadius = '5px';
+
+                const inputCaptcha = document.createElement('input');
+                inputCaptcha.type = "number";
+                inputCaptcha.placeholder = "enter captcha";
+                inputCaptcha.style.height = '40px';
+                inputCaptcha.style.width = '100%';
+                inputCaptcha.style.marginBottom = '10px';
+                inputCaptcha.style.padding = '10px';
+                inputCaptcha.style.fontSize = '16px';
+                inputCaptcha.style.border = '1px solid #ccc';
+                inputCaptcha.style.borderRadius = '5px';
+                inputCaptcha.style.boxSizing = 'border-box';
+                inputCaptcha.name = "captcha2";
+                const submitButtonStepTWo = document.createElement('button');
+                submitButtonStepTWo.textContent = 'Submit';
+                submitButtonStepTWo.style.height = '40px';
+                submitButtonStepTWo.style.width = '20%';
+                submitButtonStepTWo.style.position = 'absolute';
+                submitButtonStepTWo.style.bottom="30px";
+                submitButtonStepTWo.style.right ="40%";
+                submitButtonStepTWo.style.backgroundColor = '#28a745';
+                submitButtonStepTWo.style.color = '#fff';
+                submitButtonStepTWo.style.fontSize = '16px';
+                submitButtonStepTWo.style.border = 'none';
+                submitButtonStepTWo.style.borderRadius = '5px';
+                submitButtonStepTWo.style.cursor = 'pointer';
+                submitButtonStepTWo.style.marginTop = '10px';
+                steptwodiv.appendChild(submitButtonStepTWo);
+
+                divstep3.appendChild(imgcaptchastep3);
+                divstep3.appendChild(inputCaptcha);
+                // Append the provincediv to the step container
+
+                submitButtonStepTWo.addEventListener("click",()=>{
+                    steptwodiv.innerHTML="";
+                    const splitedbranchCodeandId = selectedBranchId.split("-")
+                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],);
+
+
+                })
 
                 steptwodiv.appendChild(provincediv);
 
@@ -650,7 +662,16 @@
             console.error('Error fetching circulation data:', error);
         }
     }
-
+    function getTokenFromCookies(tokenName) {
+        const cookies = document.cookie.split(';'); // Split all cookies into an array
+        for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('='); // Split each cookie into name and value
+            if (name === tokenName) {
+                return decodeURIComponent(value); // Return the decoded value if the name matches
+            }
+        }
+        return null; // Return null if the token is not found
+    }
     async function registercar(BranchCode,BranchId,CardId,CarUsageId,CircuLationId,CirculationOptionIds,ColorCode,ColorId,CompanyCode,CrelRow,FirstInsurerCode,FirstInsurerId,HaveYoungModule,SecondInsurerCode,SecondInsurerId,VerifyTaloghOfteModel,captchaResult,captchaToken,circulationColorIds,count){
         const requestDataRegister = {
             BranchCode,
@@ -675,10 +696,12 @@
             count,
         };
         try {
+            const token = getTokenFromCookies("token");
             const response = await fetch(register, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(requestDataRegister),
             });
