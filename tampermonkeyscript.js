@@ -6,6 +6,8 @@
 // @author       You
 // @match        *://saipa.iranecar.com/*
 // @grant        GM_xmlhttpRequest
+// @grant GM_setValue
+// @grant GM_getValue
 // ==/UserScript==
 
 (function () {
@@ -453,6 +455,16 @@
                     option.textContent = province.title;  // Assuming each province has a 'title' property
                     provinceSelect.appendChild(option);
                 });
+
+
+                const divstep3=document.createElement("div");
+                divstep3.style.backgroundColor = '#333';
+                divstep3.style.color = '#fff';
+                divstep3.style.width="30%";
+                divstep3.style.padding = '15px';
+                divstep3.style.borderRadius = '8px';
+                divstep3.style.marginBottom = '20px';
+                divstep3.style.marginRight = '20px';
                 // Add event listener to handle the province selection
                 provinceSelect.addEventListener("change", async function (event) {
                     try {
@@ -555,9 +567,63 @@
                             // Add new branch options from responseCityBranchData
                             responseCityBranchData.forEach(branch => {
                                 const newBranchOption = document.createElement("option");
-                                newBranchOption.value = branch.id;  // Assuming responseCityBranchData has an 'id' property for each branch
+                                newBranchOption.value = `${branch.code}-${branch.id}`;  // Assuming responseCityBranchData has an 'id' property for each branch
                                 newBranchOption.textContent = `Branch: ${branch.title}`;  // Assuming responseCityBranchData has a 'title' property for each branch
                                 cityBranchSelect.appendChild(newBranchOption);
+                            });
+
+                            cityBranchSelect.addEventListener("change", async function (event) {
+
+
+                                const captcha2 = await fetchCaptchasstep2();
+                                const imgcaptchastep3 = document.createElement('img');
+                                imgcaptchastep3.src = captcha2.image;
+                                imgcaptchastep3.alt = 'Captcha';
+                                imgcaptchastep3.style.height = '80px';
+                                imgcaptchastep3.style.marginBottom = '10px';
+                                imgcaptchastep3.style.border = '1px solid #ccc';
+                                imgcaptchastep3.style.borderRadius = '5px';
+
+                                const inputCaptcha = document.createElement('input');
+                                inputCaptcha.type = "number";
+                                inputCaptcha.placeholder = "enter captcha";
+                                inputCaptcha.style.height = '40px';
+                                inputCaptcha.style.width = '100%';
+                                inputCaptcha.style.marginBottom = '10px';
+                                inputCaptcha.style.padding = '10px';
+                                inputCaptcha.style.fontSize = '16px';
+                                inputCaptcha.style.border = '1px solid #ccc';
+                                inputCaptcha.style.borderRadius = '5px';
+                                inputCaptcha.style.boxSizing = 'border-box';
+                                inputCaptcha.name = "captcha2";
+                                const submitButtonStepTWo = document.createElement('button');
+                                submitButtonStepTWo.textContent = 'Submit';
+                                submitButtonStepTWo.style.height = '40px';
+                                submitButtonStepTWo.style.width = '20%';
+                                submitButtonStepTWo.style.position = 'absolute';
+                                submitButtonStepTWo.style.bottom="30px";
+                                submitButtonStepTWo.style.right ="40%";
+                                submitButtonStepTWo.style.backgroundColor = '#28a745';
+                                submitButtonStepTWo.style.color = '#fff';
+                                submitButtonStepTWo.style.fontSize = '16px';
+                                submitButtonStepTWo.style.border = 'none';
+                                submitButtonStepTWo.style.borderRadius = '5px';
+                                submitButtonStepTWo.style.cursor = 'pointer';
+                                submitButtonStepTWo.style.marginTop = '10px';
+                                steptwodiv.appendChild(submitButtonStepTWo);
+
+                                divstep3.appendChild(imgcaptchastep3);
+                                divstep3.appendChild(inputCaptcha);
+                                // Append the provincediv to the step container
+
+                                submitButtonStepTWo.addEventListener("click",()=>{
+                                    steptwodiv.innerHTML="";
+                                    const selectedBranchId = event.target.value;
+                                    const splitedbranchCodeandId = selectedBranchId.split("-")
+                                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],);
+
+
+                                })
                             });
                         });
                     } catch (error) {
@@ -566,70 +632,17 @@
                 });
 
 
-                const divstep3=document.createElement("div");
-                divstep3.style.backgroundColor = '#333';
-                divstep3.style.color = '#fff';
-                divstep3.style.width="30%";
-                divstep3.style.padding = '15px';
-                divstep3.style.borderRadius = '8px';
-                divstep3.style.marginBottom = '20px';
-                divstep3.style.marginRight = '20px';
-
-                const captcha2 = await fetchCaptchasstep2();
-                const imgcaptchastep3 = document.createElement('img');
-                imgcaptchastep3.src = captcha2.image;
-                imgcaptchastep3.alt = 'Captcha';
-                imgcaptchastep3.style.height = '80px';
-                imgcaptchastep3.style.marginBottom = '10px';
-                imgcaptchastep3.style.border = '1px solid #ccc';
-                imgcaptchastep3.style.borderRadius = '5px';
-
-                const inputCaptcha = document.createElement('input');
-                inputCaptcha.type = "number";
-                inputCaptcha.placeholder = "enter captcha";
-                inputCaptcha.style.height = '40px';
-                inputCaptcha.style.width = '100%';
-                inputCaptcha.style.marginBottom = '10px';
-                inputCaptcha.style.padding = '10px';
-                inputCaptcha.style.fontSize = '16px';
-                inputCaptcha.style.border = '1px solid #ccc';
-                inputCaptcha.style.borderRadius = '5px';
-                inputCaptcha.style.boxSizing = 'border-box';
-                inputCaptcha.name = "captcha2";
 
 
+                steptwodiv.appendChild(provincediv);
 
-                const submitButtonStepTWo = document.createElement('button');
-                submitButtonStepTWo.textContent = 'Submit';
-                submitButtonStepTWo.style.height = '40px';
-                submitButtonStepTWo.style.width = '20%';
-                submitButtonStepTWo.style.position = 'absolute';
-                submitButtonStepTWo.style.bottom="30px";
-                submitButtonStepTWo.style.right ="40%";
-                submitButtonStepTWo.style.backgroundColor = '#28a745';
-                submitButtonStepTWo.style.color = '#fff';
-                submitButtonStepTWo.style.fontSize = '16px';
-                submitButtonStepTWo.style.border = 'none';
-                submitButtonStepTWo.style.borderRadius = '5px';
-                submitButtonStepTWo.style.cursor = 'pointer';
-                submitButtonStepTWo.style.marginTop = '10px';
-                submitButtonStepTWo.addEventListener("click",()=>{
-                    steptwodiv.innerHTML="";
+                provincediv.appendChild(provinceSelect);
 
-
-
-
-                })
                 // Loop through each province item in the response and create an option
                 // Append the province select to the province div
-                provincediv.appendChild(provinceSelect);
-                // Append the provincediv to the step container
-                steptwodiv.appendChild(provincediv);
-                steptwodiv.appendChild(submitButtonStepTWo);
+
                 // Finally, append the step div to the main container
                 mainContainer.appendChild(steptwodiv);
-                divstep3.appendChild(imgcaptchastep3);
-                divstep3.appendChild(inputCaptcha);
 
                 mainContainer.appendChild(divstep3);
             }
