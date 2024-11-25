@@ -565,38 +565,6 @@
                     }
                 });
 
-                // Loop through each province item in the response and create an option
-                const submitButtonStepTWo = document.createElement('button');
-                submitButtonStepTWo.textContent = 'Submit';
-                submitButtonStepTWo.style.height = '40px';
-                submitButtonStepTWo.style.width = '20%';
-                submitButtonStepTWo.style.position = 'absolute';
-                submitButtonStepTWo.style.bottom="30px";
-                submitButtonStepTWo.style.right ="40%";
-                submitButtonStepTWo.style.backgroundColor = '#28a745';
-                submitButtonStepTWo.style.color = '#fff';
-                submitButtonStepTWo.style.fontSize = '16px';
-                submitButtonStepTWo.style.border = 'none';
-                submitButtonStepTWo.style.borderRadius = '5px';
-                submitButtonStepTWo.style.cursor = 'pointer';
-                submitButtonStepTWo.style.marginTop = '10px';
-                submitButtonStepTWo.addEventListener("click",()=>{
-                steptwodiv.innerHTML="";
-
-
-
-
-                })
-
-                // Append the province select to the province div
-                provincediv.appendChild(provinceSelect);
-                // Append the provincediv to the step container
-                steptwodiv.appendChild(provincediv);
-                steptwodiv.appendChild(submitButtonStepTWo);
-                // Finally, append the step div to the main container
-                mainContainer.appendChild(steptwodiv);
-
-
 
                 const divstep3=document.createElement("div");
                 divstep3.style.backgroundColor = '#333';
@@ -628,19 +596,84 @@
                 inputCaptcha.style.borderRadius = '5px';
                 inputCaptcha.style.boxSizing = 'border-box';
                 inputCaptcha.name = "captcha2";
+
+
+
+                const submitButtonStepTWo = document.createElement('button');
+                submitButtonStepTWo.textContent = 'Submit';
+                submitButtonStepTWo.style.height = '40px';
+                submitButtonStepTWo.style.width = '20%';
+                submitButtonStepTWo.style.position = 'absolute';
+                submitButtonStepTWo.style.bottom="30px";
+                submitButtonStepTWo.style.right ="40%";
+                submitButtonStepTWo.style.backgroundColor = '#28a745';
+                submitButtonStepTWo.style.color = '#fff';
+                submitButtonStepTWo.style.fontSize = '16px';
+                submitButtonStepTWo.style.border = 'none';
+                submitButtonStepTWo.style.borderRadius = '5px';
+                submitButtonStepTWo.style.cursor = 'pointer';
+                submitButtonStepTWo.style.marginTop = '10px';
+                submitButtonStepTWo.addEventListener("click",()=>{
+                    steptwodiv.innerHTML="";
+
+
+
+
+                })
+                // Loop through each province item in the response and create an option
+                // Append the province select to the province div
+                provincediv.appendChild(provinceSelect);
+                // Append the provincediv to the step container
+                steptwodiv.appendChild(provincediv);
+                steptwodiv.appendChild(submitButtonStepTWo);
+                // Finally, append the step div to the main container
+                mainContainer.appendChild(steptwodiv);
                 divstep3.appendChild(imgcaptchastep3);
                 divstep3.appendChild(inputCaptcha);
 
                 mainContainer.appendChild(divstep3);
-
             }
         } catch (error) {
             console.error('Error fetching circulation data:', error);
         }
     }
 
-async function registercar(BranchCode,BranchId,CardId,CarUsageId,CircuLationId,CirculationOptionIds,ColorCode,ColorId,CompanyCode,CrelRow,FirstInsurerCode,FirstInsurerId,HaveYoungModule,SecondInsurerCode,SecondInsurerId,VerifyTaloghOfteModel,captchaResult,captchaToken,circulationColorIds,count){
-}
+    async function registercar(BranchCode,BranchId,CardId,CarUsageId,CircuLationId,CirculationOptionIds,ColorCode,ColorId,CompanyCode,CrelRow,FirstInsurerCode,FirstInsurerId,HaveYoungModule,SecondInsurerCode,SecondInsurerId,VerifyTaloghOfteModel,captchaResult,captchaToken,circulationColorIds,count){
+        const requestDataRegister = {
+            BranchCode,
+            BranchId,
+            CardId,
+            CarUsageId,
+            CircuLationId,
+            CirculationOptionIds,
+            ColorCode,
+            ColorId,
+            CompanyCode,
+            CrelRow,
+            FirstInsurerCode,
+            FirstInsurerId,
+            HaveYoungModule,
+            SecondInsurerCode,
+            SecondInsurerId,
+            VerifyTaloghOfteModel,
+            captchaResult,
+            captchaToken,
+            circulationColorIds,
+            count,
+        };
+        try {
+            const response = await fetch(register, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestDataRegister),
+            });
+        }catch{
+            console.log("Error");
+        }
+
+    }
     // Initialize script
     fetchCaptcha();
     fetchSaipaItems();
