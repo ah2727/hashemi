@@ -393,7 +393,7 @@
             const data = await response.json();
             let selectedBranchId;
             let defaultBranchId;
-
+            let selectedoption;
             if (data && data.data[0].title) {
                 // Create a div for options
                 const optionsDiv = document.createElement('div');
@@ -406,16 +406,42 @@
                 console.log(data);
 
                 // Create a select element for options
-                const optionsList = document.createElement('select');
-                optionsList.style.width = "100%";
+                const selectedOptions = new Set();
 
+                // Populate checkboxes from data
                 data.data[0].options.forEach(option => {
-                    const listItem = document.createElement('option');
-                    listItem.textContent = `${option.title} - Price: ${option.price}`;
-                    listItem.value = `${option.id}`;
-                    optionsList.appendChild(listItem);
+                    const checkboxContainer = document.createElement('div');
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `option-${option.id}`;
+                    checkbox.value = option.id;
+
+                    // Add a label for the checkbox
+                    const label = document.createElement('label');
+                    label.htmlFor = `option-${option.id}`;
+                    label.textContent = `${option.title} - Price: ${option.price}`;
+
+                    // Append checkbox and label to the container
+                    checkboxContainer.appendChild(checkbox);
+                    checkboxContainer.appendChild(label);
+
+                    // Append the container to the optionsDiv
+                    optionsDiv.appendChild(checkboxContainer);
+
+                    // Add change listener to update selected options
+                    checkbox.addEventListener('change', (event) => {
+                        if (event.target.checked) {
+                            selectedOptions.add(option.id); // Add the selected option ID
+
+                        } else {
+                            selectedOptions.delete(option.id); // Remove the unselected option ID
+                        }
+                        selectedoption = Array.from(selectedOptions);
+                        console.log('Selected Options:', Array.from(selectedOptions)); // Log the selected options as an array
+                    });
                 });
-                optionsDiv.appendChild(optionsList);
+
 
                 // Create step container div
                 const steptwodiv = document.createElement('div');
@@ -624,7 +650,7 @@
                 submitButtonStepTWo.style.width = '20%';
                 submitButtonStepTWo.style.position = 'absolute';
                 submitButtonStepTWo.style.bottom="30px";
-                submitButtonStepTWo.style.right ="40%";
+                submitButtonStepTWo.style.right ="70%";
                 submitButtonStepTWo.style.backgroundColor = '#28a745';
                 submitButtonStepTWo.style.color = '#fff';
                 submitButtonStepTWo.style.fontSize = '16px';
@@ -641,7 +667,8 @@
                 submitButtonStepTWo.addEventListener("click",()=>{
                     steptwodiv.innerHTML="";
                     const splitedbranchCodeandId = selectedBranchId.split("-")
-                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],);
+                    console.log(data.data[0]);
+                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],data.data[0].id,data.data[0].carUsages[0].id,data.data[0].id,selectedoption,data.data[0].circulationColors[0].colorCode,data.data[0].circulationColors[0].id,data.data[0].companyCode,data.data[0].crcl_row,);
 
 
                 })
