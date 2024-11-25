@@ -347,7 +347,7 @@
                 });
 
                 // Append dropdown to the main container
-                mainContainer.innerHTML += '<h2 style="width:20%">Select Insurer</h2>';
+                steptwodiv.innerHTML += '<h2 style="width:20%">Select Insurer</h2>';
                 steptwodiv.appendChild(dropdown);
             } else {
                 console.error('Failed to fetch insurers or no data available');
@@ -393,7 +393,7 @@
                 steptwodiv.style.color = '#fff';
                 steptwodiv.style.width = "20%";
                 steptwodiv.style.marginTop = '20px';
-
+                steptwodiv.style.marginRight='20%';
                 // Add the options div to the step div
                 steptwodiv.appendChild(optionsDiv);
 
@@ -555,21 +555,40 @@
                 submitButtonStepTWo.style.cursor = 'pointer';
                 submitButtonStepTWo.style.marginTop = '10px';
                 submitButtonStepTWo.addEventListener("click",()=>{
-                    steptwodiv.innerHTML="";
+                steptwodiv.innerHTML="";
+
+
+
+
                 })
+
                 // Append the province select to the province div
                 provincediv.appendChild(provinceSelect);
                 // Append the provincediv to the step container
                 steptwodiv.appendChild(provincediv);
                 steptwodiv.appendChild(submitButtonStepTWo);
-
                 // Finally, append the step div to the main container
                 mainContainer.appendChild(steptwodiv);
+
+
+
+                const divstep3=document.createElement("div");
+                divstep3.style.backgroundColor = '#333';
+                divstep3.style.color = '#fff';
+                divstep3.style.width="30%";
+                divstep3.style.padding = '15px';
+                divstep3.style.borderRadius = '8px';
+                divstep3.style.marginBottom = '20px';
+                divstep3.style.marginRight = '20px';
+
+                mainContainer.appendChild(divstep3);
+
             }
         } catch (error) {
             console.error('Error fetching circulation data:', error);
         }
     }
+
 async function registercar(){
 }
     // Initialize script
