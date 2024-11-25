@@ -81,7 +81,33 @@
             console.error('Error fetching captcha:', error);
         }
     }
+    async function fetchCaptchasstep2() {
+        try {
+            const visitorId = Math.random();
+            const apiUrl = `https://recaptchag.iranecar.com/api/Captcha/GetCaptchaImage2?visitorId=${visitorId}`;
+            const response = await fetch(apiUrl, { method: 'GET' });
 
+            if (!response.ok) {
+                console.error('Failed to fetch captcha image:', response.statusText);
+                return;
+            }
+
+            const tokenId = response.headers.get('token-id');
+            console.log('Retrieved token-id:', tokenId);
+
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+
+
+            return {
+                image:imageUrl,
+                tokenid:tokenId
+            };
+
+        } catch (error) {
+            console.error('Error fetching captcha:', error);
+        }
+    }
     // Function to create or update the captcha display
     function updateCaptcha(imageUrl, tokenId) {
         if (isLoggedIn) {
@@ -580,6 +606,30 @@
                 divstep3.style.borderRadius = '8px';
                 divstep3.style.marginBottom = '20px';
                 divstep3.style.marginRight = '20px';
+
+                const captcha2 = await fetchCaptchasstep2();
+                const imgcaptchastep3 = document.createElement('img');
+                imgcaptchastep3.src = captcha2.image;
+                imgcaptchastep3.alt = 'Captcha';
+                imgcaptchastep3.style.height = '80px';
+                imgcaptchastep3.style.marginBottom = '10px';
+                imgcaptchastep3.style.border = '1px solid #ccc';
+                imgcaptchastep3.style.borderRadius = '5px';
+
+                const inputCaptcha = document.createElement('input');
+                inputCaptcha.type = "number";
+                inputCaptcha.placeholder = "enter captcha";
+                inputCaptcha.style.height = '40px';
+                inputCaptcha.style.width = '100%';
+                inputCaptcha.style.marginBottom = '10px';
+                inputCaptcha.style.padding = '10px';
+                inputCaptcha.style.fontSize = '16px';
+                inputCaptcha.style.border = '1px solid #ccc';
+                inputCaptcha.style.borderRadius = '5px';
+                inputCaptcha.style.boxSizing = 'border-box';
+                inputCaptcha.name = "captcha2";
+                divstep3.appendChild(imgcaptchastep3);
+                divstep3.appendChild(inputCaptcha);
 
                 mainContainer.appendChild(divstep3);
 
