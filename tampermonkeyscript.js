@@ -639,7 +639,7 @@
         }
     }
 
-async function registercar(){
+async function registercar(BranchCode,BranchId,CardId,CarUsageId,CircuLationId,CirculationOptionIds,ColorCode,ColorId,CompanyCode,CrelRow,FirstInsurerCode,FirstInsurerId,HaveYoungModule,SecondInsurerCode,SecondInsurerId,VerifyTaloghOfteModel,captchaResult,captchaToken,circulationColorIds,count){
 }
     // Initialize script
     fetchCaptcha();
