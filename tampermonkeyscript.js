@@ -20,6 +20,7 @@
     const circulationbranchcity = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchProvinceCity';
     const circilationbranchcityget = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchCity';
     const register = 'https://sapi.iranecar.com/api/v1/order/register';
+    const confirmdata = 'https://sapi.iranecar.com/api/v1/order/getConfirmationData';
     const mainContainer = createMainContainer();
 
     // Function to create the container for login and car items
@@ -359,8 +360,8 @@
             let capthcainput;
             let selectedInsureIdOne;
             let selectedInsureCodeone;
-            let selctedInsureCodeTwo;
-            let slectedInsureIdTwo;
+            let selectedInsureCodeTwo;
+            let selectedInsureIdTwo;
 
             if (data && data.data[0].title) {
                 // Create a div for options
@@ -442,8 +443,8 @@
                     steptwodiv.appendChild(dropdown);
 
                     // Variables to store selected values
-                    let selectedInsureIdOne = null;
-                    let selectedInsureCodeOne = null;
+
+
                     console.log(dataّInsure);
                     let selectedInsureIdTwo = dataّInsure.data[1].id;
                     let selectedInsureCodeTwo = dataّInsure.data[1].code;
@@ -456,20 +457,20 @@
                             // If a valid option is selected
                             const insurerone = selectedOption.value.split('-');
                             selectedInsureIdOne = insurerone[0];
-                            selectedInsureCodeOne = insurerone[1];
+                            selectedInsureCodeone = insurerone[1];
 
 
                         } else {
                             // Reset if "Select Insurer" is chosen
                             selectedInsureIdOne = null;
-                            selectedInsureCodeOne = null;
+                            selectedInsureCodeone = null;
                             selectedInsureIdTwo = null;
                             selectedInsureCodeTwo = null;
                         }
 
                         // Log the selected values
                         console.log('Selected Insurer ID One:', selectedInsureIdOne);
-                        console.log('Selected Insurer Code One:', selectedInsureCodeOne);
+                        console.log('Selected Insurer Code One:', selectedInsureCodeone);
                         console.log('Selected Insurer ID Two:', selectedInsureIdTwo);
                         console.log('Selected Insurer Code Two:', selectedInsureCodeTwo);
                     });
@@ -664,7 +665,7 @@
                 imgcaptchastep3.style.marginBottom = '10px';
                 imgcaptchastep3.style.border = '1px solid #ccc';
                 imgcaptchastep3.style.borderRadius = '5px';
-                captchatoken=captcha2.token
+                captchatoken=captcha2.tokenid
                 const inputCaptcha = document.createElement('input');
                 inputCaptcha.type = "number";
                 inputCaptcha.placeholder = "enter captcha";
@@ -698,13 +699,14 @@
                 // Append the provincediv to the step container
 
                 submitButtonStepTWo.addEventListener("click",()=>{
-                    steptwodiv.innerHTML="";
+
                     const splitedbranchCodeandId = selectedBranchId.split("-")
                     console.log(data.data[0]);
                     capthcainput = document.getElementById('captcha2').value;
-                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],data.data[0].id,data.data[0].carUsages[0].id,data.data[0].id,selectedoption,data.data[0].circulationColors[0].colorCode,data.data[0].circulationColors[0].id,data.data[0].companyCode,data.data[0].crcl_row,);
+                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],data.data[0].id,data.data[0].carUsages[0].id,data.data[0].id,selectedoption,data.data[0].circulationColors[0].colorCode,data.data[0].circulationColors[0].id,data.data[0].companyCode,data.data[0].crcl_row,selectedInsureIdOne,selectedInsureCodeone,false,selectedInsureIdTwo,selectedInsureCodeTwo,false,capthcainput,captchatoken);
 
-
+                    steptwodiv.remove();
+                    divstep3.remove();
                 })
 
                 steptwodiv.appendChild(provincediv);
@@ -756,19 +758,76 @@
             circulationColorIds,
             count,
         };
+        const token = getTokenFromCookies("token");
         try {
-            const token = getTokenFromCookies("token");
             const response = await fetch(register, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'authorization': `Bearer ${token}`
-                },
+                    'Authorization': `Bearer ${token}`
+        },
                 body: JSON.stringify(requestDataRegister),
             });
-        }catch{
-            console.log("Error");
+
+            const data = await response.json();
+            const banks = data.banks; // Make sure 'banks' exists in the response
+            // Create divstep4
+            const divstep4 = document.createElement("div");
+            divstep4.style.backgroundColor = '#333';
+            divstep4.style.color = '#fff';
+            divstep4.style.width = "30%";
+            divstep4.style.padding = '15px';
+            divstep4.style.borderRadius = '8px';
+            divstep4.style.marginBottom = '20px';
+            divstep4.style.marginRight = '20px';
+            mainContainer.appendChild(divstep4);
+
+            // Create <select> element
+            const selectElement = document.createElement("select");
+            selectElement.id = "bankSelector";
+            divstep4.appendChild(selectElement); // Append the select to divstep4, not to document.body
+
+            // Create a default "Select a bank" option
+            const defaultOption = document.createElement("option");
+            defaultOption.textContent = "Select a bank";
+            defaultOption.value = "";
+            selectElement.appendChild(defaultOption);
+
+            // Loop through banks and create <option> elements
+            banks.forEach(bank => {
+                const option = document.createElement("option");
+                option.value = bank.id;
+                option.textContent = `${bank.bankName} (${bank.persianBankName})`;
+                option.setAttribute("data-url", bank.url); // Assuming the bank has a URL
+                selectElement.appendChild(option);
+            });
+
+            // Add event listener for the selector
+            selectElement.addEventListener("change", function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const bankUrl = selectedOption.getAttribute("data-url");
+                if (bankUrl) {
+                    console.log("Selected bank URL:", bankUrl);
+                    // You can now use the bank URL for displaying an image or other purposes
+                }
+            });
+            const requestDataConfirm = {
+                id: data.id  // Only sending the id field as per your request
+            };
+            const responseConfirm = await fetch(confirmdata, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`  // Include authorization if needed
+        },
+                body: JSON.stringify(requestDataConfirm),
+            });
+
+
+        } catch (error) {
+            console.log("Error:", error);
         }
+
 
     }
     // Initialize script
