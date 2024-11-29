@@ -21,8 +21,10 @@
     const circilationbranchcityget = 'https://sauthapi.iranecar.com/api/v1/branch/circulationBranchCity';
     const register = 'https://sapi.iranecar.com/api/v1/order/register';
     const confirmdata = 'https://sapi.iranecar.com/api/v1/order/getConfirmationData';
+    const fillconfirm = "https://sapi.iranecar.com/api/v1/order/fillConfirm";
+    const getUrl = "https://sapi.iranecar.com/api/v1/Order/GetActiveReservedUrl";
     const mainContainer = createMainContainer();
-    const fillconfirm = "https://sapi.iranecar.com/api/v1/order/fillConfirm"
+
     // Function to create the container for login and car items
     function createMainContainer() {
         const containerDiv = document.createElement('div');
@@ -822,6 +824,7 @@
         },
                 body: JSON.stringify(requestDataConfirm),
             });
+            const captchadiv = document.createElement("div");
             const captcha1 =await fetchCaptchasstep2();
             const captcha2 =await fetchCaptchasstep2();
             const imgcaptchastep3 = document.createElement('img');
@@ -878,11 +881,12 @@
             submitButtonStepTWo.style.borderRadius = '5px';
             submitButtonStepTWo.style.cursor = 'pointer';
             submitButtonStepTWo.style.marginTop = '10px';
-            divstep4.appendChild(imgcaptchastep3);
-            divstep4.appendChild(inputCaptcha);
-            divstep4.appendChild(imgcaptchastep4);
-            divstep4.appendChild(inputCaptcha2);
-            divstep4.appendChild(submitButtonStepTWo);
+            captchadiv.appendChild(imgcaptchastep3);
+            captchadiv.appendChild(inputCaptcha);
+            captchadiv.appendChild(imgcaptchastep4);
+            captchadiv.appendChild(inputCaptcha2);
+            captchadiv.appendChild(submitButtonStepTWo);
+            divstep4.appendChild(captchadiv); // Append the select to divstep4, not to document.body
 
         } catch (error) {
             console.log("Error:", error);
