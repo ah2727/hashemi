@@ -357,6 +357,11 @@
             let selectedoption;
             let captchatoken;
             let capthcainput;
+            let selectedInsureIdOne;
+            let selectedInsureCodeone;
+            let selctedInsureCodeTwo;
+            let slectedInsureIdTwo;
+
             if (data && data.data[0].title) {
                 // Create a div for options
                 const optionsDiv = document.createElement('div');
@@ -420,309 +425,344 @@
 
                     // Add a default "Select Insurer" option
                     const defaultOption = document.createElement('option');
+                    defaultOption.value = ''; // No value for default
                     defaultOption.textContent = 'Select Insurer';
                     dropdown.appendChild(defaultOption);
 
                     // Populate dropdown with insurers
                     dataّInsure.data.forEach(insurer => {
                         const option = document.createElement('option');
-                        option.value = insurer.id;
-                        option.textContent = insurer.title;
+                        option.value = `${insurer.id}-${insurer.code}`; // Set value to insurer ID
+                        option.textContent = insurer.title; // Display insurer title
                         dropdown.appendChild(option);
                     });
 
                     // Append dropdown to the main container
                     steptwodiv.innerHTML += '<h2 style="width:20%">Select Insurer</h2>';
                     steptwodiv.appendChild(dropdown);
+
+                    // Variables to store selected values
+                    let selectedInsureIdOne = null;
+                    let selectedInsureCodeOne = null;
+                    console.log(dataّInsure);
+                    let selectedInsureIdTwo = dataّInsure.data[1].id;
+                    let selectedInsureCodeTwo = dataّInsure.data[1].code;
+
+                    // Listen for changes in the dropdown
+                    dropdown.addEventListener('change', function (event) {
+                        const selectedOption = event.target.options[event.target.selectedIndex];
+
+                        if (selectedOption.value) {
+                            // If a valid option is selected
+                            const insurerone = selectedOption.value.split('-');
+                            selectedInsureIdOne = insurerone[0];
+                            selectedInsureCodeOne = insurerone[1];
+
+
+                        } else {
+                            // Reset if "Select Insurer" is chosen
+                            selectedInsureIdOne = null;
+                            selectedInsureCodeOne = null;
+                            selectedInsureIdTwo = null;
+                            selectedInsureCodeTwo = null;
+                        }
+
+                        // Log the selected values
+                        console.log('Selected Insurer ID One:', selectedInsureIdOne);
+                        console.log('Selected Insurer Code One:', selectedInsureCodeOne);
+                        console.log('Selected Insurer ID Two:', selectedInsureIdTwo);
+                        console.log('Selected Insurer Code Two:', selectedInsureCodeTwo);
+                    });
                 } else {
                     console.error('Failed to fetch insurers or no data available');
-                };
+                }
 
-            // Create step container div
-            steptwodiv.style.backgroundColor = '#444';
-            steptwodiv.style.color = '#fff';
-            steptwodiv.style.width = "20%";
-            steptwodiv.style.marginTop = '20px';
-            steptwodiv.style.marginRight='20%';
-            // Add the options div to the step div
-            steptwodiv.appendChild(optionsDiv);
+                // Create step container div
+                steptwodiv.style.backgroundColor = '#444';
+                steptwodiv.style.color = '#fff';
+                steptwodiv.style.width = "20%";
+                steptwodiv.style.marginTop = '20px';
+                steptwodiv.style.marginRight='20%';
+                // Add the options div to the step div
+                steptwodiv.appendChild(optionsDiv);
 
-            // Append the step container to the main container
-            mainContainer.appendChild(steptwodiv);
+                // Append the step container to the main container
+                mainContainer.appendChild(steptwodiv);
 
-            // Fetch provinces for the circulation ID
-            const responseprovince = await fetch(circulationbranchprovince, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ "circulationId": `${data.data[0].id}` }),
-            });
+                // Fetch provinces for the circulation ID
+                const responseprovince = await fetch(circulationbranchprovince, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ "circulationId": `${data.data[0].id}` }),
+                });
 
-            const resprovince = await responseprovince.json();
+                const resprovince = await responseprovince.json();
 
-            // Create a div for the province select
-            const provincediv = document.createElement('div');
-            provincediv.style.backgroundColor = '#444';
-            provincediv.style.color = '#fff';
-            provincediv.style.width = "100%";
-            provincediv.style.padding = '15px';
+                // Create a div for the province select
+                const provincediv = document.createElement('div');
+                provincediv.style.backgroundColor = '#444';
+                provincediv.style.color = '#fff';
+                provincediv.style.width = "100%";
+                provincediv.style.padding = '15px';
 
-            // Create the province select element
-            const provinceSelect = document.createElement("select");
-            provinceSelect.style.width = "100%";
-            resprovince.forEach(province => {
-                const option = document.createElement("option");
-                option.value = province.id;  // Assuming each province has an 'id' property
-                option.textContent = province.title;  // Assuming each province has a 'title' property
-                provinceSelect.appendChild(option);
-            });
+                // Create the province select element
+                const provinceSelect = document.createElement("select");
+                provinceSelect.style.width = "100%";
+                resprovince.forEach(province => {
+                    const option = document.createElement("option");
+                    option.value = province.id;  // Assuming each province has an 'id' property
+                    option.textContent = province.title;  // Assuming each province has a 'title' property
+                    provinceSelect.appendChild(option);
+                });
 
 
-            const divstep3=document.createElement("div");
-            divstep3.style.backgroundColor = '#333';
-            divstep3.style.color = '#fff';
-            divstep3.style.width="30%";
-            divstep3.style.padding = '15px';
-            divstep3.style.borderRadius = '8px';
-            divstep3.style.marginBottom = '20px';
-            divstep3.style.marginRight = '20px';
-            // Add event listener to handle the province selection
-            provinceSelect.addEventListener("change", async function (event) {
-                try {
-                    const selectedProvince = event.target.value;
-                    console.log("Selected province:", selectedProvince);
+                const divstep3=document.createElement("div");
+                divstep3.style.backgroundColor = '#333';
+                divstep3.style.color = '#fff';
+                divstep3.style.width="30%";
+                divstep3.style.padding = '15px';
+                divstep3.style.borderRadius = '8px';
+                divstep3.style.marginBottom = '20px';
+                divstep3.style.marginRight = '20px';
+                // Add event listener to handle the province selection
+                provinceSelect.addEventListener("change", async function (event) {
+                    try {
+                        const selectedProvince = event.target.value;
+                        console.log("Selected province:", selectedProvince);
 
-                    // Prepare the request data
-                    const requestDatacity = {
-                        provinceId: selectedProvince,
-                        circulationId: data.data[0].id
-                    };
-
-                    // Send the POST request to fetch city data
-                    const response = await fetch(circulationbranchcity, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(requestDatacity),
-                    });
-
-                    // Parse the response as JSON
-                    const responseData = await response.json();
-
-                    // Create or select the city dropdown
-                    let citySelect = document.querySelector('#citySelect');
-                    if (!citySelect) {
-                        // If the city select element does not exist, create it
-                        citySelect = document.createElement("select");
-                        citySelect.id = 'citySelect';
-                        citySelect.style.width = "100%";
-
-                        // Add the citySelect to the container
-                        const cityDiv = document.createElement('div');
-                        cityDiv.style.backgroundColor = '#444';
-                        cityDiv.style.color = '#fff';
-                        cityDiv.style.width = "100%";
-                        cityDiv.style.padding = '15px';
-                        cityDiv.appendChild(citySelect);
-
-                        // Append the cityDiv to the steptwodiv container
-                        steptwodiv.appendChild(cityDiv);
-                    } else {
-                        // Clear existing options if the citySelect already exists
-                        citySelect.innerHTML = '';
-                    }
-
-                    // Add new city options from responseData
-                    responseData.forEach(city => {
-                        const newOption = document.createElement("option");
-                        newOption.value = city.code;  // Assuming responseData has a 'code' property for each city
-                        newOption.textContent = `City: ${city.title}`;  // Assuming responseData has a 'title' property for each city
-                        citySelect.appendChild(newOption);
-                    });
-
-                    // Add an event listener to log the selected city ID and fetch branches
-                    citySelect.addEventListener("change", async function (event) {
-                        const selectedCityId = event.target.value;
-                        console.log("Selected city ID:", selectedCityId);
-
-                        const requestDatacityBranch = {
-                            cityCode: selectedCityId,
+                        // Prepare the request data
+                        const requestDatacity = {
+                            provinceId: selectedProvince,
                             circulationId: data.data[0].id
                         };
 
-                        // Send the POST request to fetch city branch data
-                        const responsecitybranch = await fetch(circilationbranchcityget, {
+                        // Send the POST request to fetch city data
+                        const response = await fetch(circulationbranchcity, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify(requestDatacityBranch),
+                            body: JSON.stringify(requestDatacity),
                         });
 
-                        const responseCityBranchData = await responsecitybranch.json();
+                        // Parse the response as JSON
+                        const responseData = await response.json();
 
-                        // Create or select the city branch dropdown
-                        let cityBranchSelect = document.querySelector('#cityBranchSelect');
-                        if (!cityBranchSelect) {
-                            // If the city branch select element does not exist, create it
-                            cityBranchSelect = document.createElement("select");
-                            cityBranchSelect.id = 'cityBranchSelect';
-                            cityBranchSelect.style.width = "100%";
+                        // Create or select the city dropdown
+                        let citySelect = document.querySelector('#citySelect');
+                        if (!citySelect) {
+                            // If the city select element does not exist, create it
+                            citySelect = document.createElement("select");
+                            citySelect.id = 'citySelect';
+                            citySelect.style.width = "100%";
 
-                            // Add the cityBranchSelect to the container
-                            const cityBranchDiv = document.createElement('div');
-                            cityBranchDiv.style.backgroundColor = '#444';
-                            cityBranchDiv.style.color = '#fff';
-                            cityBranchDiv.style.width = "100%";
-                            cityBranchDiv.style.padding = '15px';
-                            cityBranchDiv.appendChild(cityBranchSelect);
+                            // Add the citySelect to the container
+                            const cityDiv = document.createElement('div');
+                            cityDiv.style.backgroundColor = '#444';
+                            cityDiv.style.color = '#fff';
+                            cityDiv.style.width = "100%";
+                            cityDiv.style.padding = '15px';
+                            cityDiv.appendChild(citySelect);
 
-                            // Append the cityBranchDiv to the steptwodiv container
-                            steptwodiv.appendChild(cityBranchDiv);
+                            // Append the cityDiv to the steptwodiv container
+                            steptwodiv.appendChild(cityDiv);
                         } else {
-                            // Clear existing options if the cityBranchSelect already exists
-                            cityBranchSelect.innerHTML = '';
+                            // Clear existing options if the citySelect already exists
+                            citySelect.innerHTML = '';
                         }
 
-                        // Add new branch options from responseCityBranchData
-                        responseCityBranchData.forEach((branch, index) => {
-                            const newBranchOption = document.createElement("option");
-                            newBranchOption.value = `${branch.code}-${branch.id}`; // Combine branch code and ID
-                            newBranchOption.textContent = `Branch: ${branch.title}`; // Display branch title
+                        // Add new city options from responseData
+                        responseData.forEach(city => {
+                            const newOption = document.createElement("option");
+                            newOption.value = city.code;  // Assuming responseData has a 'code' property for each city
+                            newOption.textContent = `City: ${city.title}`;  // Assuming responseData has a 'title' property for each city
+                            citySelect.appendChild(newOption);
+                        });
 
-                            // Check if this branch should be the default
-                            if (index === 0) { // Use the first branch as default (adjust condition if needed)
-                                defaultBranchId = newBranchOption.value;
+                        // Add an event listener to log the selected city ID and fetch branches
+                        citySelect.addEventListener("change", async function (event) {
+                            const selectedCityId = event.target.value;
+                            console.log("Selected city ID:", selectedCityId);
+
+                            const requestDatacityBranch = {
+                                cityCode: selectedCityId,
+                                circulationId: data.data[0].id
+                            };
+
+                            // Send the POST request to fetch city branch data
+                            const responsecitybranch = await fetch(circilationbranchcityget, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(requestDatacityBranch),
+                            });
+
+                            const responseCityBranchData = await responsecitybranch.json();
+
+                            // Create or select the city branch dropdown
+                            let cityBranchSelect = document.querySelector('#cityBranchSelect');
+                            if (!cityBranchSelect) {
+                                // If the city branch select element does not exist, create it
+                                cityBranchSelect = document.createElement("select");
+                                cityBranchSelect.id = 'cityBranchSelect';
+                                cityBranchSelect.style.width = "100%";
+
+                                // Add the cityBranchSelect to the container
+                                const cityBranchDiv = document.createElement('div');
+                                cityBranchDiv.style.backgroundColor = '#444';
+                                cityBranchDiv.style.color = '#fff';
+                                cityBranchDiv.style.width = "100%";
+                                cityBranchDiv.style.padding = '15px';
+                                cityBranchDiv.appendChild(cityBranchSelect);
+
+                                // Append the cityBranchDiv to the steptwodiv container
+                                steptwodiv.appendChild(cityBranchDiv);
+                            } else {
+                                // Clear existing options if the cityBranchSelect already exists
+                                cityBranchSelect.innerHTML = '';
                             }
 
-                            cityBranchSelect.appendChild(newBranchOption);
+                            // Add new branch options from responseCityBranchData
+                            responseCityBranchData.forEach((branch, index) => {
+                                const newBranchOption = document.createElement("option");
+                                newBranchOption.value = `${branch.code}-${branch.id}`; // Combine branch code and ID
+                                newBranchOption.textContent = `Branch: ${branch.title}`; // Display branch title
+
+                                // Check if this branch should be the default
+                                if (index === 0) { // Use the first branch as default (adjust condition if needed)
+                                    defaultBranchId = newBranchOption.value;
+                                }
+
+                                cityBranchSelect.appendChild(newBranchOption);
+                            });
+                            if (defaultBranchId) {
+                                cityBranchSelect.value = defaultBranchId; // Set the dropdown to the default option
+                                selectedBranchId = defaultBranchId; // Update the selectedBranchId variable
+                            }
+
+                            // Add the event listener for change
+                            cityBranchSelect.addEventListener("change", async function (event) {
+                                selectedBranchId = event.target.value;
+                                console.log("Selected Branch ID:", selectedBranchId);
+                            });
                         });
-                        if (defaultBranchId) {
-                            cityBranchSelect.value = defaultBranchId; // Set the dropdown to the default option
-                            selectedBranchId = defaultBranchId; // Update the selectedBranchId variable
-                        }
-
-                        // Add the event listener for change
-                        cityBranchSelect.addEventListener("change", async function (event) {
-                            selectedBranchId = event.target.value;
-                            console.log("Selected Branch ID:", selectedBranchId);
-                        });
-                    });
-                } catch (error) {
-                    console.error('Error fetching city data:', error);
-                }
-            });
+                    } catch (error) {
+                        console.error('Error fetching city data:', error);
+                    }
+                });
 
 
 
-            const captcha2 = await fetchCaptchasstep2();
-            const imgcaptchastep3 = document.createElement('img');
-            imgcaptchastep3.src = captcha2.image;
-            imgcaptchastep3.alt = 'Captcha';
-            imgcaptchastep3.style.height = '80px';
-            imgcaptchastep3.style.marginBottom = '10px';
-            imgcaptchastep3.style.border = '1px solid #ccc';
-            imgcaptchastep3.style.borderRadius = '5px';
+                const captcha2 = await fetchCaptchasstep2();
+                const imgcaptchastep3 = document.createElement('img');
+                imgcaptchastep3.src = captcha2.image;
+                imgcaptchastep3.alt = 'Captcha';
+                imgcaptchastep3.style.height = '80px';
+                imgcaptchastep3.style.marginBottom = '10px';
+                imgcaptchastep3.style.border = '1px solid #ccc';
+                imgcaptchastep3.style.borderRadius = '5px';
+                captchatoken=captcha2.token
+                const inputCaptcha = document.createElement('input');
+                inputCaptcha.type = "number";
+                inputCaptcha.placeholder = "enter captcha";
+                inputCaptcha.style.height = '40px';
+                inputCaptcha.style.width = '100%';
+                inputCaptcha.style.marginBottom = '10px';
+                inputCaptcha.style.padding = '10px';
+                inputCaptcha.style.fontSize = '16px';
+                inputCaptcha.style.border = '1px solid #ccc';
+                inputCaptcha.style.borderRadius = '5px';
+                inputCaptcha.style.boxSizing = 'border-box';
+                inputCaptcha.id = "captcha2";
+                const submitButtonStepTWo = document.createElement('button');
+                submitButtonStepTWo.textContent = 'Submit';
+                submitButtonStepTWo.style.height = '40px';
+                submitButtonStepTWo.style.width = '20%';
+                submitButtonStepTWo.style.position = 'absolute';
+                submitButtonStepTWo.style.bottom="30px";
+                submitButtonStepTWo.style.right ="70%";
+                submitButtonStepTWo.style.backgroundColor = '#28a745';
+                submitButtonStepTWo.style.color = '#fff';
+                submitButtonStepTWo.style.fontSize = '16px';
+                submitButtonStepTWo.style.border = 'none';
+                submitButtonStepTWo.style.borderRadius = '5px';
+                submitButtonStepTWo.style.cursor = 'pointer';
+                submitButtonStepTWo.style.marginTop = '10px';
+                steptwodiv.appendChild(submitButtonStepTWo);
 
-            const inputCaptcha = document.createElement('input');
-            inputCaptcha.type = "number";
-            inputCaptcha.placeholder = "enter captcha";
-            inputCaptcha.style.height = '40px';
-            inputCaptcha.style.width = '100%';
-            inputCaptcha.style.marginBottom = '10px';
-            inputCaptcha.style.padding = '10px';
-            inputCaptcha.style.fontSize = '16px';
-            inputCaptcha.style.border = '1px solid #ccc';
-            inputCaptcha.style.borderRadius = '5px';
-            inputCaptcha.style.boxSizing = 'border-box';
-            inputCaptcha.name = "captcha2";
-            const submitButtonStepTWo = document.createElement('button');
-            submitButtonStepTWo.textContent = 'Submit';
-            submitButtonStepTWo.style.height = '40px';
-            submitButtonStepTWo.style.width = '20%';
-            submitButtonStepTWo.style.position = 'absolute';
-            submitButtonStepTWo.style.bottom="30px";
-            submitButtonStepTWo.style.right ="70%";
-            submitButtonStepTWo.style.backgroundColor = '#28a745';
-            submitButtonStepTWo.style.color = '#fff';
-            submitButtonStepTWo.style.fontSize = '16px';
-            submitButtonStepTWo.style.border = 'none';
-            submitButtonStepTWo.style.borderRadius = '5px';
-            submitButtonStepTWo.style.cursor = 'pointer';
-            submitButtonStepTWo.style.marginTop = '10px';
-            steptwodiv.appendChild(submitButtonStepTWo);
+                divstep3.appendChild(imgcaptchastep3);
+                divstep3.appendChild(inputCaptcha);
+                // Append the provincediv to the step container
 
-            divstep3.appendChild(imgcaptchastep3);
-            divstep3.appendChild(inputCaptcha);
-            // Append the provincediv to the step container
-
-            submitButtonStepTWo.addEventListener("click",()=>{
-                steptwodiv.innerHTML="";
-                const splitedbranchCodeandId = selectedBranchId.split("-")
-                console.log(data.data[0]);
-                registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],data.data[0].id,data.data[0].carUsages[0].id,data.data[0].id,selectedoption,data.data[0].circulationColors[0].colorCode,data.data[0].circulationColors[0].id,data.data[0].companyCode,data.data[0].crcl_row,);
+                submitButtonStepTWo.addEventListener("click",()=>{
+                    steptwodiv.innerHTML="";
+                    const splitedbranchCodeandId = selectedBranchId.split("-")
+                    console.log(data.data[0]);
+                    capthcainput = document.getElementById('captcha2').value;
+                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],data.data[0].id,data.data[0].carUsages[0].id,data.data[0].id,selectedoption,data.data[0].circulationColors[0].colorCode,data.data[0].circulationColors[0].id,data.data[0].companyCode,data.data[0].crcl_row,);
 
 
-            })
+                })
 
-            steptwodiv.appendChild(provincediv);
+                steptwodiv.appendChild(provincediv);
 
-            provincediv.appendChild(provinceSelect);
+                provincediv.appendChild(provinceSelect);
 
-            // Loop through each province item in the response and create an option
-            // Append the province select to the province div
+                // Loop through each province item in the response and create an option
+                // Append the province select to the province div
 
-            // Finally, append the step div to the main container
-            mainContainer.appendChild(steptwodiv);
+                // Finally, append the step div to the main container
+                mainContainer.appendChild(steptwodiv);
 
-            mainContainer.appendChild(divstep3);
-        }
-    } catch (error) {
-        console.error('Error fetching circulation data:', error);
-    }
-}
- function getTokenFromCookies(tokenName) {
-    const cookies = document.cookie.split(';'); // Split all cookies into an array
-    for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split('='); // Split each cookie into name and value
-        if (name === tokenName) {
-            return decodeURIComponent(value); // Return the decoded value if the name matches
+                mainContainer.appendChild(divstep3);
+            }
+        } catch (error) {
+            console.error('Error fetching circulation data:', error);
         }
     }
-    return null; // Return null if the token is not found
-}
-async function registercar(BranchCode,BranchId,CardId,CarUsageId,CircuLationId,CirculationOptionIds,ColorCode,ColorId,CompanyCode,CrelRow,FirstInsurerCode,FirstInsurerId,HaveYoungModule,SecondInsurerCode,SecondInsurerId,VerifyTaloghOfteModel,captchaResult,captchaToken,circulationColorIds,count){
-    const requestDataRegister = {
-        BranchCode,
-        BranchId,
-        CardId,
-        CarUsageId,
-        CircuLationId,
-        CirculationOptionIds,
-        ColorCode,
-        ColorId,
-        CompanyCode,
-        CrelRow,
-        FirstInsurerCode,
-        FirstInsurerId,
-        HaveYoungModule,
-        SecondInsurerCode,
-        SecondInsurerId,
-        VerifyTaloghOfteModel,
-        captchaResult,
-        captchaToken,
-        circulationColorIds,
-        count,
-    };
-    try {
-        const token = getTokenFromCookies("token");
-        const response = await fetch(register, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'authorization': `Bearer ${token}`
+    function getTokenFromCookies(tokenName) {
+        const cookies = document.cookie.split(';'); // Split all cookies into an array
+        for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('='); // Split each cookie into name and value
+            if (name === tokenName) {
+                return decodeURIComponent(value); // Return the decoded value if the name matches
+            }
+        }
+        return null; // Return null if the token is not found
+    }
+    async function registercar(BranchCode,BranchId,CardId,CarUsageId,CircuLationId,CirculationOptionIds,ColorCode,ColorId,CompanyCode,CrclRow,FirstInsurerCode,FirstInsurerId,HaveYoungModule,SecondInsurerCode,SecondInsurerId,VerifyTaloghOfteModel,captchaResult,captchaToken,circulationColorIds,count){
+        const requestDataRegister = {
+            BranchCode,
+            BranchId,
+            CardId,
+            CarUsageId,
+            CircuLationId,
+            CirculationOptionIds,
+            ColorCode,
+            ColorId,
+            CompanyCode,
+            CrclRow,
+            FirstInsurerCode,
+            FirstInsurerId,
+            HaveYoungModule,
+            SecondInsurerCode,
+            SecondInsurerId,
+            VerifyTaloghOfteModel,
+            captchaResult,
+            captchaToken,
+            circulationColorIds,
+            count,
+        };
+        try {
+            const token = getTokenFromCookies("token");
+            const response = await fetch(register, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(requestDataRegister),
             });
@@ -731,7 +771,7 @@ async function registercar(BranchCode,BranchId,CardId,CarUsageId,CircuLationId,C
         }
 
     }
-// Initialize script
-fetchCaptcha();
-fetchSaipaItems();
+    // Initialize script
+    fetchCaptcha();
+    fetchSaipaItems();
 })();
