@@ -738,7 +738,7 @@
         }
         return null; // Return null if the token is not found
     }
-    async function checkResultLoop() {
+    async function checkResultLoop(activeorder,currentUrl,nextPageUrl) {
         while (nextPageUrl === "" || activeorder === "") {
             try {
                 // Send the POST request
@@ -788,7 +788,6 @@
                 // If no nextPageUrl or activeOrderId, stop the loop
                 else {
                     console.log("No next page URL or active order ID found. Stopping the requests.");
-                    break; // Exit the loop
                 }
 
                 // Wait before making the next request (adjust delay as needed)
@@ -1017,7 +1016,7 @@
                                 let nextPageUrl = dataresponseCheckResult.data.nextPageUrl;
                                 let activeorder ="";
                                 let currentUrl="";
-                                checkResultLoop();
+                                checkResultLoop(activeorder,currentUrl,nextPageUrl);
                                 if (response.ok) {
                                     const responseGetUrl = await fetch(getreverseurl, {  // Replace with your actual endpoint
                                         method: "POST",
