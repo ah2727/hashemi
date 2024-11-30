@@ -738,7 +738,15 @@
         }
         return null; // Return null if the token is not found
     }
-    async function checkResultLoop(activeorder,currentUrl,nextPageUrl) {
+    async function checkResultLoop(data,resultfilldata) {
+        let activeorder="";
+        let currentUrl="";
+        const token = getTokenFromCookies("token");
+        let nextPageUrl="";
+        const requestDataCheckResult = {
+            orderId: data.id,
+            queueId: resultfilldata.queueId
+        };
         while (nextPageUrl === "" || activeorder === "") {
             try {
                 // Send the POST request
@@ -1014,9 +1022,11 @@
                                 const dataresponseCheckResult = await responseCheckResult.json();
                                 console.log(dataresponseCheckResult)
                                 let nextPageUrl = dataresponseCheckResult.data.nextPageUrl;
-                                let activeorder ="";
-                                let currentUrl="";
-                                checkResultLoop(activeorder,currentUrl,nextPageUrl);
+                                if(nextPageUrl!=""){
+                                    window.location.href=nextPageUrl;
+                                }else{
+                                    checkResultLoop(data,resultfilldata);
+                                }
                                 if (response.ok) {
                                     const responseGetUrl = await fetch(getreverseurl, {  // Replace with your actual endpoint
                                         method: "POST",
