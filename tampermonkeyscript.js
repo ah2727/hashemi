@@ -705,7 +705,7 @@
                     const splitedbranchCodeandId = selectedBranchId.split("-")
                     console.log(data.data[0]);
                     capthcainput = document.getElementById('captcha2').value;
-                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],data.data[0].id,data.data[0].carUsages[0].id,data.data[0].id,selectedoption,data.data[0].circulationColors[0].colorCode,data.data[0].circulationColors[0].id,data.data[0].companyCode,data.data[0].crcl_row,selectedInsureIdOne,selectedInsureCodeone,false,selectedInsureIdTwo,selectedInsureCodeTwo,false,capthcainput,captchatoken);
+                    registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],data.data[0].id,data.data[0].carUsages[0].id,data.data[0].id,selectedoption,data.data[0].circulationColors[0].colorCode,data.data[0].circulationColors[0].id,data.data[0].companyCode,data.data[0].crcl_row,selectedInsureIdOne,selectedInsureCodeone,false,selectedInsureIdTwo,selectedInsureCodeTwo,false,capthcainput,captchatoken,[],1);
 
                     steptwodiv.remove();
                     divstep3.remove();
@@ -800,94 +800,136 @@
                 const option = document.createElement("option");
                 option.value = bank.id;
                 option.textContent = `${bank.bankName} (${bank.persianBankName})`;
-                option.setAttribute("data-url", bank.url); // Assuming the bank has a URL
+                option.setAttribute("dbankbankName", bank.bankName); // Assuming the bank has a URL
                 selectElement.appendChild(option);
             });
 
             // Add event listener for the selector
-            selectElement.addEventListener("change", function () {
+            selectElement.addEventListener("change", async function () {
                 const selectedOption = this.options[this.selectedIndex];
-                const bankUrl = selectedOption.getAttribute("data-url");
+                const bankUrl = selectedOption.getAttribute("dbankbankName");
+
+                const requestDataConfirm = {
+                    id: data.id  // Only sending the id field as per your request
+                };
+                const responseConfirm = await fetch(confirmdata, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`  // Include authorization if needed
+        },
+                    body: JSON.stringify(requestDataConfirm),
+                });
+
+                const captchadiv = document.createElement("div");
+                const captcha1 =await fetchCaptchasstep2();
+                const captcha2 =await fetchCaptchasstep2();
+                const imgcaptchastep3 = document.createElement('img');
+                imgcaptchastep3.src = captcha1.image;
+                imgcaptchastep3.alt = 'Captcha';
+                imgcaptchastep3.style.height = '80px';
+                imgcaptchastep3.style.marginBottom = '10px';
+                imgcaptchastep3.style.border = '1px solid #ccc';
+                imgcaptchastep3.style.borderRadius = '5px';
+                const captchatoken1=captcha1.tokenid
+                const inputCaptcha = document.createElement('input');
+                inputCaptcha.type = "number";
+                inputCaptcha.placeholder = "enter captcha";
+                inputCaptcha.style.height = '40px';
+                inputCaptcha.style.width = '100%';
+                inputCaptcha.style.marginBottom = '10px';
+                inputCaptcha.style.padding = '10px';
+                inputCaptcha.style.fontSize = '16px';
+                inputCaptcha.style.border = '1px solid #ccc';
+                inputCaptcha.style.borderRadius = '5px';
+                inputCaptcha.style.boxSizing = 'border-box';
+                inputCaptcha.id = "captcha1";
+                const imgcaptchastep4 = document.createElement('img');
+                imgcaptchastep4.src = captcha2.image;
+                imgcaptchastep4.alt = 'Captcha';
+                imgcaptchastep4.style.height = '80px';
+                imgcaptchastep4.style.marginBottom = '10px';
+                imgcaptchastep4.style.border = '1px solid #ccc';
+                imgcaptchastep4.style.borderRadius = '5px';
+                const captchatoken2=captcha2.tokenid
+                const inputCaptcha2 = document.createElement('input');
+                inputCaptcha2.type = "number";
+                inputCaptcha2.placeholder = "enter captcha";
+                inputCaptcha2.style.height = '40px';
+                inputCaptcha2.style.width = '100%';
+                inputCaptcha2.style.marginBottom = '10px';
+                inputCaptcha2.style.padding = '10px';
+                inputCaptcha2.style.fontSize = '16px';
+                inputCaptcha2.style.border = '1px solid #ccc';
+                inputCaptcha2.style.borderRadius = '5px';
+                inputCaptcha2.style.boxSizing = 'border-box';
+                inputCaptcha2.id = "captcha2";
+
+                const submitButtonStepTWo = document.createElement('button');
+                submitButtonStepTWo.textContent = 'Submit';
+                submitButtonStepTWo.style.height = '40px';
+                submitButtonStepTWo.style.width = '20%';
+                submitButtonStepTWo.style.position = 'absolute';
+                submitButtonStepTWo.style.bottom="30px";
+                submitButtonStepTWo.style.right ="70%";
+                submitButtonStepTWo.style.backgroundColor = '#28a745';
+                submitButtonStepTWo.style.color = '#fff';
+                submitButtonStepTWo.style.fontSize = '16px';
+                submitButtonStepTWo.style.border = 'none';
+                submitButtonStepTWo.style.borderRadius = '5px';
+                submitButtonStepTWo.style.cursor = 'pointer';
+                submitButtonStepTWo.style.marginTop = '10px';
+                captchadiv.appendChild(imgcaptchastep3);
+                captchadiv.appendChild(inputCaptcha);
+                captchadiv.appendChild(imgcaptchastep4);
+                captchadiv.appendChild(inputCaptcha2);
+                captchadiv.appendChild(submitButtonStepTWo);
+                divstep4.appendChild(captchadiv); // Append the select to divstep4, not to document.body
+                submitButtonStepTWo.addEventListener('click', async () => {
+                    try {
+                        const capthcainput = document.getElementById('captcha1').value;
+                        const requestData = {
+                            bankName: bankUrl,
+                            captchaRes: null,
+                            captchaResult: capthcainput,
+                            captchaToken: captchatoken1,
+                            confirmAffidavit: false,
+                            isAccept: true,
+                            onlineshoppingId: data.id,
+                        };
+                        const responseFillConfirm = await fetch(fillconfirm, {
+                            method: 'POST',
+                            headers: {
+                                "Accept": "application/json",
+                                "Accept-Encoding": "gzip, deflate, br, zstd",
+                                "Accept-Language": "en-US,en;q=0.9",
+                                "Access-Control-Allow-Origin": "*", // Note: This header is usually set by the server, not by the client
+                                "Authorization": `Bearer ${token}`,
+                                "Cache-Control": "no-cache",
+                                "Content-Type": "application/json",
+                                "Origin": "https://saipa.iranecar.com",
+                                "Pragma": "no-cache",
+                                "Priority": "u=1, i",
+                                "Referer": "https://saipa.iranecar.com/",
+                            },
+                            body: JSON.stringify(requestData),
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log("Success:", result);
+                        } else {
+                            console.error("Failed to submit:", response.statusText);
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                    }
+                })
                 if (bankUrl) {
                     console.log("Selected bank URL:", bankUrl);
                     // You can now use the bank URL for displaying an image or other purposes
                 }
             });
-            const requestDataConfirm = {
-                id: data.id  // Only sending the id field as per your request
-            };
-            const responseConfirm = await fetch(confirmdata, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`  // Include authorization if needed
-        },
-                body: JSON.stringify(requestDataConfirm),
-            });
-            const captchadiv = document.createElement("div");
-            const captcha1 =await fetchCaptchasstep2();
-            const captcha2 =await fetchCaptchasstep2();
-            const imgcaptchastep3 = document.createElement('img');
-            imgcaptchastep3.src = captcha1.image;
-            imgcaptchastep3.alt = 'Captcha';
-            imgcaptchastep3.style.height = '80px';
-            imgcaptchastep3.style.marginBottom = '10px';
-            imgcaptchastep3.style.border = '1px solid #ccc';
-            imgcaptchastep3.style.borderRadius = '5px';
-            const captchatoken1=captcha1.tokenid
-            const inputCaptcha = document.createElement('input');
-            inputCaptcha.type = "number";
-            inputCaptcha.placeholder = "enter captcha";
-            inputCaptcha.style.height = '40px';
-            inputCaptcha.style.width = '100%';
-            inputCaptcha.style.marginBottom = '10px';
-            inputCaptcha.style.padding = '10px';
-            inputCaptcha.style.fontSize = '16px';
-            inputCaptcha.style.border = '1px solid #ccc';
-            inputCaptcha.style.borderRadius = '5px';
-            inputCaptcha.style.boxSizing = 'border-box';
-            inputCaptcha.id = "captcha1";
-            const imgcaptchastep4 = document.createElement('img');
-            imgcaptchastep4.src = captcha2.image;
-            imgcaptchastep4.alt = 'Captcha';
-            imgcaptchastep4.style.height = '80px';
-            imgcaptchastep4.style.marginBottom = '10px';
-            imgcaptchastep4.style.border = '1px solid #ccc';
-            imgcaptchastep4.style.borderRadius = '5px';
-            const captchatoken2=captcha2.tokenid
-            const inputCaptcha2 = document.createElement('input');
-            inputCaptcha2.type = "number";
-            inputCaptcha2.placeholder = "enter captcha";
-            inputCaptcha2.style.height = '40px';
-            inputCaptcha2.style.width = '100%';
-            inputCaptcha2.style.marginBottom = '10px';
-            inputCaptcha2.style.padding = '10px';
-            inputCaptcha2.style.fontSize = '16px';
-            inputCaptcha2.style.border = '1px solid #ccc';
-            inputCaptcha2.style.borderRadius = '5px';
-            inputCaptcha2.style.boxSizing = 'border-box';
-            inputCaptcha.id = "captcha2";
-            const submitButtonStepTWo = document.createElement('button');
-            submitButtonStepTWo.textContent = 'Submit';
-            submitButtonStepTWo.style.height = '40px';
-            submitButtonStepTWo.style.width = '20%';
-            submitButtonStepTWo.style.position = 'absolute';
-            submitButtonStepTWo.style.bottom="30px";
-            submitButtonStepTWo.style.right ="70%";
-            submitButtonStepTWo.style.backgroundColor = '#28a745';
-            submitButtonStepTWo.style.color = '#fff';
-            submitButtonStepTWo.style.fontSize = '16px';
-            submitButtonStepTWo.style.border = 'none';
-            submitButtonStepTWo.style.borderRadius = '5px';
-            submitButtonStepTWo.style.cursor = 'pointer';
-            submitButtonStepTWo.style.marginTop = '10px';
-            captchadiv.appendChild(imgcaptchastep3);
-            captchadiv.appendChild(inputCaptcha);
-            captchadiv.appendChild(imgcaptchastep4);
-            captchadiv.appendChild(inputCaptcha2);
-            captchadiv.appendChild(submitButtonStepTWo);
-            divstep4.appendChild(captchadiv); // Append the select to divstep4, not to document.body
-
         } catch (error) {
             console.log("Error:", error);
         }
