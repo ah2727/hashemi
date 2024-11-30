@@ -23,8 +23,9 @@
     const confirmdata = 'https://sapi.iranecar.com/api/v1/order/getConfirmationData';
     const fillconfirm = "https://sapi.iranecar.com/api/v1/order/fillConfirm";
     const getUrl = "https://sapi.iranecar.com/api/v1/Order/GetActiveReservedUrl";
+    const checkresult = "https://sapi.iranecar.com/api/v1/bank/checkResult";
+    const getreverseurl = "https://sapi.iranecar.com/api/v1/Order/GetActiveReservedUrl";
     const mainContainer = createMainContainer();
-
     // Function to create the container for login and car items
     function createMainContainer() {
         const containerDiv = document.createElement('div');
@@ -703,7 +704,7 @@
                 submitButtonStepTWo.addEventListener("click",()=>{
 
                     const splitedbranchCodeandId = selectedBranchId.split("-")
-                    console.log(data.data[0]);
+                    console.log(data.data[0].circulationColors[0].colorCode);
                     capthcainput = document.getElementById('captcha2').value;
                     registercar(splitedbranchCodeandId[0],splitedbranchCodeandId[1],data.data[0].id,data.data[0].carUsages[0].id,data.data[0].id,selectedoption,data.data[0].circulationColors[0].colorCode,data.data[0].circulationColors[0].id,data.data[0].companyCode,data.data[0].crcl_row,selectedInsureIdOne,selectedInsureCodeone,false,selectedInsureIdTwo,selectedInsureCodeTwo,false,capthcainput,captchatoken,[],1);
 
@@ -744,17 +745,18 @@
             CardId,
             CarUsageId,
             CircuLationId,
-            CirculationOptionIds,
+            CirculationOptionIds:[143764,143766],
             ColorCode,
             ColorId,
             CompanyCode,
             CrclRow,
-            FirstInsurerCode,
-            FirstInsurerId,
+            FirstInsurerCode:"509",
+            FirstInsurerId:"8",
             HaveYoungModule,
-            SecondInsurerCode,
-            SecondInsurerId,
+            SecondInsurerCode:"507",
+            SecondInsurerId:"7",
             VerifyTaloghOfteModel,
+            captchaRes:null,
             captchaResult,
             captchaToken,
             circulationColorIds,
@@ -916,8 +918,68 @@
                         });
 
                         if (response.ok) {
-                            const result = await response.json();
-                            console.log("Success:", result);
+                            const resultfilldata =await responseFillConfirm.json();
+                            const setCookieHeader = responseFillConfirm.headers.get("Set-Cookie");
+                            console.log("Set-Cookie Header:", setCookieHeader);  // For debugging purposes
+
+                            console.log(resultfilldata);
+
+                            try {
+                                const requestDataCheckResult = {
+                                    orderId: data.id,
+                                    queueId: resultfilldata.queueId
+                                };
+                                const responseCheckResult = await fetch(checkresult, {  // Replace with your actual endpoint
+                                    method: "POST",
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        "Authorization": `Bearer ${token}`,  // Replace with your actual token if needed
+                                    },
+                                    body: JSON.stringify(requestDataCheckResult)
+                                });
+                                const capthcainput = document.getElementById('captcha2').value;
+
+                                const serverdata = {
+                                    googleCaptchaResult: null,
+                                    megaCaptchaResult: capthcainput,
+                                    megaCaptchaToken:captchatoken2
+                                };
+                                const dataresponseCheckResult = await responseCheckResult.json();
+
+                                const nextPageUrl = dataresponseCheckResult.data.nextPageUrl;
+
+                                if(nextPageUrl == ""){
+                                    const responseCheckResult = await fetch(checkresult, {  // Replace with your actual endpoint
+                                        method: "POST",
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            "Authorization": `Bearer ${token}`,  // Replace with your actual token if needed
+                                        },
+                                        body: JSON.stringify(requestDataCheckResult)
+                                    });
+
+                                }
+                                if (response.ok) {
+                                    const responseGetUrl = await fetch(getreverseurl, {  // Replace with your actual endpoint
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "Authorization": `Bearer ${token}`,  // Replace with your actual token if needed
+                                        },
+                                        body: JSON.stringify(serverdata)
+                                    });
+                                    const respomsegeturl =await responseGetUrl.json();
+                                    console.log(respomsegeturl.data.url);
+                                    if(respomsegeturl.data.url){
+                                        window.location.href=respomsegeturl.data.url
+                                    }
+
+                                } else {
+                                    console.error("Error in response:", response.statusText);
+                                }
+                            } catch (error) {
+                                console.error("Error in request:", error);
+                            }
                         } else {
                             console.error("Failed to submit:", response.statusText);
                         }
