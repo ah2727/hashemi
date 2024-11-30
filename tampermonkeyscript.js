@@ -738,6 +738,71 @@
         }
         return null; // Return null if the token is not found
     }
+    async function checkResultLoop() {
+        while (nextPageUrl === "" || activeorder === "") {
+            try {
+                // Send the POST request
+                const response = await fetch(checkresult, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${token}`,  // Use your actual token here
+                    },
+                    body: JSON.stringify(requestDataCheckResult)
+                });
+
+                // Check if the request was successful
+                if (!response.ok) {
+                    console.error("Request failed with status:", response.status);
+                    break; // Exit the loop if the request fails
+                }
+
+                // Parse the response as JSON
+                const data = await response.json();
+
+                // Process the response data
+                console.log(data);
+
+                // Check if there is a nextPageUrl
+                if (data && data.data && data.data.nextPageUrl) {
+                    nextPageUrl = data.data.nextPageUrl; // Get the next page URL
+                    console.log("Next page URL:", nextPageUrl);
+
+                    // Update currentUrl for the next request
+                    currentUrl = nextPageUrl;
+                    window.location.href = currentUrl;  // Redirect to the next page
+
+                }
+                // Check if there is an active order ID
+                else if (data && data.data && data.data.activeOrderId) {
+                    activeorder = data.data.activeOrderId;
+                    console.log("Active order ID:", activeorder);
+                    break; // Exit the loop once we have the active order ID
+
+                }
+                // Handle the case where there is an error
+                else if (data && data.data && data.data.error) {
+                    console.log("Error: ", data.data.error);
+                    break; // Exit the loop on error
+                }
+                // If no nextPageUrl or activeOrderId, stop the loop
+                else {
+                    console.log("No next page URL or active order ID found. Stopping the requests.");
+                    break; // Exit the loop
+                }
+
+                // Wait before making the next request (adjust delay as needed)
+                console.log("Waiting for next request...");
+                await new Promise(resolve => setTimeout(resolve, 1000));  // 1 second delay
+
+            } catch (error) {
+                console.error("Error during request:", error);
+                break; // Exit the loop on error
+            }
+        }
+
+        console.log("Loop finished. No more pages or active order ID.");
+    }
     async function registercar(BranchCode,BranchId,CardId,CarUsageId,CircuLationId,CirculationOptionIds,ColorCode,ColorId,CompanyCode,CrclRow,FirstInsurerCode,FirstInsurerId,HaveYoungModule,SecondInsurerCode,SecondInsurerId,VerifyTaloghOfteModel,captchaResult,captchaToken,circulationColorIds,count){
         const requestDataRegister = {
             BranchCode,
@@ -913,6 +978,8 @@
                                 "Pragma": "no-cache",
                                 "Priority": "u=1, i",
                                 "Referer": "https://saipa.iranecar.com/",
+                                'Accept-Encoding': 'gzip, deflate, br', // Accepting gzip compression (default supported)
+                                'Connection': 'keep-alive',
                             },
                             body: JSON.stringify(requestData),
                         });
@@ -932,8 +999,9 @@
                                 const responseCheckResult = await fetch(checkresult, {  // Replace with your actual endpoint
                                     method: "POST",
                                     headers: {
-                                        'Content-Type': 'application/json',
-                                        "Authorization": `Bearer ${token}`,  // Replace with your actual token if needed
+                                        "Content-Type": 'application/json',
+                                        "Access-Control-Allow-Origin": "*", // Note: This header is usually set by the server, not by the client
+                                        "Authorization": `Bearer ${token}`,
                                     },
                                     body: JSON.stringify(requestDataCheckResult)
                                 });
@@ -945,20 +1013,11 @@
                                     megaCaptchaToken:captchatoken2
                                 };
                                 const dataresponseCheckResult = await responseCheckResult.json();
-
-                                const nextPageUrl = dataresponseCheckResult.data.nextPageUrl;
-
-                                if(nextPageUrl == ""){
-                                    const responseCheckResult = await fetch(checkresult, {  // Replace with your actual endpoint
-                                        method: "POST",
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            "Authorization": `Bearer ${token}`,  // Replace with your actual token if needed
-                                        },
-                                        body: JSON.stringify(requestDataCheckResult)
-                                    });
-
-                                }
+                                console.log(dataresponseCheckResult)
+                                let nextPageUrl = dataresponseCheckResult.data.nextPageUrl;
+                                let activeorder ="";
+                                let currentUrl="";
+                                checkResultLoop();
                                 if (response.ok) {
                                     const responseGetUrl = await fetch(getreverseurl, {  // Replace with your actual endpoint
                                         method: "POST",
@@ -998,6 +1057,7 @@
 
 
     }
+
     // Initialize script
     fetchCaptcha();
     fetchSaipaItems();
