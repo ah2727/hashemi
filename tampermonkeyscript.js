@@ -57,7 +57,7 @@
         const cookies = document.cookie.split('; ');
         for (let cookie of cookies) {
             const [key, value] = cookie.split('=');
-            if (key === 'isLoggedIn' && value === 'true') {
+            if (key === 'AuthUser') {
                 return true; // User is logged in
             }
         }
@@ -728,20 +728,27 @@
             console.error('Error fetching circulation data:', error);
         }
     }
-    function getTokenFromCookies(tokenName) {
+    function getTokenFromCookies(cookieName) {
         const cookies = document.cookie.split(';'); // Split all cookies into an array
         for (const cookie of cookies) {
             const [name, value] = cookie.trim().split('='); // Split each cookie into name and value
-            if (name === tokenName) {
-                return decodeURIComponent(value); // Return the decoded value if the name matches
+            if (name === cookieName) {
+                try {
+                    // Parse the JSON string
+                    const cookieData = JSON.parse(decodeURIComponent(value));
+                    return cookieData.data.token.token; // Return the token value from the cookie data
+                } catch (e) {
+                    console.error("Error parsing cookie:", e);
+                    return null; // Return null if parsing fails
+                }
             }
         }
-        return null; // Return null if the token is not found
+        return null; // Return null if the cookie is not found
     }
     async function checkResultLoop(data,resultfilldata) {
         let activeorder="";
         let currentUrl="";
-        const token = getTokenFromCookies("token");
+        const token = getTokenFromCookies("AuthUser");
         let nextPageUrl="";
         const requestDataCheckResult = {
             orderId: data.id,
@@ -834,7 +841,7 @@
             circulationColorIds,
             count,
         };
-        const token = getTokenFromCookies("token");
+        const token = getTokenFromCookies("AuthUser");
         try {
             const response = await fetch(register, {
                 method: 'POST',
