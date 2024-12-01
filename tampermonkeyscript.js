@@ -353,9 +353,12 @@
     // Fetch circulation data for the selected car
     async function fetchData(carModelId) {
         try {
-            const url = `${circulationApiUrl}?carModelId=${carModelId}`;
-            const response = await fetch(url);
-            const data = await response.json();
+            let data = ''
+            while(data==''){
+                const url = `${circulationApiUrl}?carModelId=${carModelId}`;
+                const response = await fetch(url);
+                data = await response.json();
+            }
             let selectedBranchId;
             let defaultBranchId;
             let selectedoption;
@@ -415,10 +418,11 @@
                 });
 
                 const steptwodiv = document.createElement("div");
-
-                const response = await fetch(insurersApiUrl);
-                const dataّInsure = await response.json();
-
+                let dataّInsure = '';
+                while(dataّInsure == ''){
+                    const response = await fetch(insurersApiUrl);
+                    dataّInsure = await response.json();
+                }
                 if (dataّInsure.status === 200 && dataّInsure.data.length > 0) {
                     // Create the insurer dropdown
                     const dropdown = document.createElement('select');
@@ -492,18 +496,19 @@
 
                 // Append the step container to the main container
                 mainContainer.appendChild(steptwodiv);
+                let resprovince  = '';
+                while(resprovince ==''){
+                    // Fetch provinces for the circulation ID
+                    const responseprovince = await fetch(circulationbranchprovince, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ "circulationId": `${data.data[0].id}` }),
+                    });
 
-                // Fetch provinces for the circulation ID
-                const responseprovince = await fetch(circulationbranchprovince, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ "circulationId": `${data.data[0].id}` }),
-                });
-
-                const resprovince = await responseprovince.json();
-
+                    resprovince = await responseprovince.json();
+                }
                 // Create a div for the province select
                 const provincediv = document.createElement('div');
                 provincediv.style.backgroundColor = '#444';
@@ -541,19 +546,20 @@
                             provinceId: selectedProvince,
                             circulationId: data.data[0].id
                         };
+                        let responseData ='';
+                        while(responseData == ''){
+                            // Send the POST request to fetch city data
+                            const response = await fetch(circulationbranchcity, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(requestDatacity),
+                            });
 
-                        // Send the POST request to fetch city data
-                        const response = await fetch(circulationbranchcity, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(requestDatacity),
-                        });
-
-                        // Parse the response as JSON
-                        const responseData = await response.json();
-
+                            // Parse the response as JSON
+                            responseData = await response.json();
+                        }
                         // Create or select the city dropdown
                         let citySelect = document.querySelector('#citySelect');
                         if (!citySelect) {
@@ -594,18 +600,19 @@
                                 cityCode: selectedCityId,
                                 circulationId: data.data[0].id
                             };
+                            let responseCityBranchData = "";
+                            while(responseCityBranchData == ""){
+                                // Send the POST request to fetch city branch data
+                                const responsecitybranch = await fetch(circilationbranchcityget, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify(requestDatacityBranch),
+                                });
 
-                            // Send the POST request to fetch city branch data
-                            const responsecitybranch = await fetch(circilationbranchcityget, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(requestDatacityBranch),
-                            });
-
-                            const responseCityBranchData = await responsecitybranch.json();
-
+                                responseCityBranchData = await responsecitybranch.json();
+                            }
                             // Create or select the city branch dropdown
                             let cityBranchSelect = document.querySelector('#cityBranchSelect');
                             if (!cityBranchSelect) {
@@ -1074,7 +1081,7 @@
 
     }
 
-    // Initialize script
-    fetchCaptcha();
-    fetchSaipaItems();
-})();
+            // Initialize script
+            fetchCaptcha();
+            fetchSaipaItems();
+        })();
