@@ -66,63 +66,37 @@
         }
     }
     async function showItems(data) {
-        // Validate data
-        if (!data || !Array.isArray(data.saleProjects)) {
-            console.error('❌ Invalid data format. Expected an object with saleProjects array.');
-            return;
-        }
+        return new Promise((resolve) => {
+            // Validate data
+            if (!data || !Array.isArray(data.saleProjects)) {
+                console.error('❌ Invalid data format. Expected an object with saleProjects array.');
+                resolve(null); // Resolve with null if data is invalid
+                return;
+            }
 
-        const { saleProjects, groups } = data;
+            const { saleProjects } = data;
 
-        // Ensure a main container exists
-        let mainContainer = document.getElementById('main-container');
-        if (!mainContainer) {
-            console.error('❌ Main container not found. Please create a main container with ID "main-container" first.');
-            return;
-        }
+            // Ensure a main container exists
+            let mainContainer = document.getElementById('main-container');
+            if (!mainContainer) {
+                console.error('❌ Main container not found. Please create a main container with ID "main-container" first.');
+                resolve(null); // Resolve with null if container is missing
+                return;
+            }
 
-        // Clear previous content in the main container
-        mainContainer.innerHTML = '';
+            // Clear previous content in the main container
+            mainContainer.innerHTML = '';
 
-        // Add a dropdown to select a group
-        const dropdown = document.createElement('select');
-        dropdown.id = 'group-select';
-        dropdown.style.display = 'block';
-        dropdown.style.margin = '10px auto 20px';
-        dropdown.style.padding = '8px';
-        dropdown.style.borderRadius = '4px';
-        dropdown.style.border = '1px solid #ccc';
-        dropdown.style.fontSize = '14px';
+            // Create a grid container for items
+            const itemsGrid = document.createElement('div');
+            itemsGrid.id = 'items-grid';
+            itemsGrid.style.display = 'grid';
+            itemsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
+            itemsGrid.style.gap = '20px';
+            mainContainer.appendChild(itemsGrid);
 
-        // Add default option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Filter by Group';
-        dropdown.appendChild(defaultOption);
-
-        // Populate dropdown with groups
-        groups.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group.value;
-            option.textContent = group.label;
-            dropdown.appendChild(option);
-        });
-
-        // Append dropdown to the main container
-        mainContainer.appendChild(dropdown);
-
-        // Create a grid container for items
-        const itemsGrid = document.createElement('div');
-        itemsGrid.id = 'items-grid';
-        itemsGrid.style.display = 'grid';
-        itemsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
-        itemsGrid.style.gap = '20px';
-        mainContainer.appendChild(itemsGrid);
-
-        // Function to render items based on selected group
-        const renderItems = (filteredItems) => {
-            itemsGrid.innerHTML = ''; // Clear existing items
-            filteredItems.forEach((item, index) => {
+            // Render items
+            saleProjects.forEach((item) => {
                 // Create a card for each item
                 const itemCard = document.createElement('div');
                 itemCard.style.border = '1px solid #ddd';
@@ -176,8 +150,8 @@
 
                 // Add click event to the button
                 selectButton.addEventListener('click', () => {
-                    console.log(`Item Selected:`, item);
-                    // Add your custom logic for the button click here
+                    console.log('Selected Item:', item);
+                    resolve(item); // Resolve the Promise with the selected item
                 });
 
                 // Append the button to the item card
@@ -186,25 +160,7 @@
                 // Append card to grid
                 itemsGrid.appendChild(itemCard);
             });
-        };
-
-        // Initial render with all items
-        renderItems(saleProjects);
-
-        // Filter items based on group selection
-        dropdown.addEventListener('change', (event) => {
-            const selectedValue = event.target.value;
-            if (selectedValue === '') {
-                renderItems(saleProjects); // Show all if no group is selected
-            } else {
-                const filteredItems = saleProjects.filter(
-                    item => item.ModelGroup === parseInt(selectedValue, 10)
-                );
-                renderItems(filteredItems);
-            }
         });
-
-        console.log('✅ Items displayed inside the main container with group selection dropdown.');
     }
 
 
@@ -213,9 +169,9 @@
         try {
             // Await the data from getItems
             const data = await getItems();
-            await showItems(data)
+            const selected = await showItems(data)
             // Access and log saleProjects from the response
-            console.log(data.saleProjects);
+            console.log("selected",selected);
         } catch (error) {
             console.error('❌ Error in main function:', error.message);
         }
