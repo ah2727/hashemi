@@ -16,6 +16,7 @@
     //variables
     const targetKey = 'SaleInternet';
     const apiUrlfetchitems = 'https://esale.ikd.ir/api/sales/getSaleProjects';
+    const captchaUrl = 'https://esale.ikd.ir/api/esales/getData66';
     //login
     let token = ""
     // Check if localStorage is available
@@ -65,6 +66,14 @@
             throw error; // Rethrow the error to handle it in the calling function if needed
         }
     }
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0; // Generate random 4-bit number
+            const v = c === 'x' ? r : (r & 0x3 | 0x8); // Use `r` for x and specific bitwise for y
+            return v.toString(16); // Convert to hexadecimal
+        });
+    }
+
     async function showItems(data) {
         return new Promise((resolve) => {
             // Validate data
@@ -164,14 +173,31 @@
     }
 
 
-    async function getCaptcha(captchaType,captchaId){}
+    async function getCaptcha(cardId){
+        const payload = {
+            captchaId: cardId,
+            captchaType: "AgencySelect",
+            saltName: "captchaText",
+            token: "", // Add token dynamically if needed
+            valueId: generateUUID(),
+        };
+        try {
+            console.log('🥷 Sending POST request to:', apiUrlfetchitems);
+            const response = await axios.post(apiUrlfetchitems, payload, { headers });
+            console.log('✅ API Response:', response.data);
+        } catch (error) {
+            console.error('❌ API Request Failed:', error.response ? error.response.data : error.message);
+        }
+    }
+    async function stepBeforeGetway(){}
     async function main(){
         try {
             // Await the data from getItems
             const data = await getItems();
             const selected = await showItems(data)
+
             // Access and log saleProjects from the response
-            console.log("selected",selected);
+
         } catch (error) {
             console.error('❌ Error in main function:', error.message);
         }
