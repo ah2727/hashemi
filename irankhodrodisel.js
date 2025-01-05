@@ -176,20 +176,24 @@
         });
     }
 
-    async function sendSms(){
+    async function sendSms() {
         const payload = {
             smsType: "Order",
-            systemCode: "SaleInternet"
+            systemCode: "SaleInternet",
         };
+
         try {
             // Send the POST request
-            const response = await axios.post(smsApi, payload,{headers});
+            const response = await axios.post(smsApi, payload, { headers });
 
-            // Handle the response
-            console.log('Response:', response.data);
+            // Return the response data
+            return response.data;
         } catch (error) {
             // Handle errors
             console.error('Error:', error.response ? error.response.data : error.message);
+
+            // Optionally, rethrow the error for handling upstream
+            throw error;
         }
     }
 
@@ -320,8 +324,7 @@
         button.style.cursor = 'pointer';
         button.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
 
-        // Attach the click event to the button
-        button.addEventListener('click', sendSms);
+
         mainContainer.appendChild(button);
 
         // SMS Input
@@ -394,7 +397,47 @@
             submitButton.style.cursor = 'pointer';
             submitButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
             submitButton.style.marginTop = '10px';
+            button.addEventListener('click', async () => {
+                let lastSmsResponse;
+                try {
+                    // Call the sendSms function and get the response
+                    const smsResponse = await sendSms();
+                    console.log('SMS sent successfully:', smsResponse);
 
+                    // Extract the mobile number from the SMS response (modify based on your API response)
+                    const mobileNumber = smsResponse.mobile || 'default-number'; // Use actual response field
+
+                    // Add a 2-second delay before making the GET request
+                    setTimeout(async () => {
+                        try {
+                            // Make a GET request to fetch details for the number
+                            lastSmsResponse = await axios.get(`https://khodro.bot1234.online/api/last-sms/09017670855`);
+                            console.log('Last SMS Data:', lastSmsResponse.data);
+                            const smsContent = lastSmsResponse.data?.data?.sms || "SMS content not available.";
+                            console.log('Extracted SMS Content:', smsContent);
+
+                            // Use a regular expression to extract the numeric code
+                            const codeMatch = smsContent.match(/\d+/); // Matches the first sequence of digits
+                            const numericCode = codeMatch ? codeMatch[0] : "Code not found"; // Get the first match or fallback
+
+                            input.value = numericCode;
+
+                            // Optionally display the response on the page
+                        } catch (error) {
+                            console.error('Failed to fetch last SMS data:', error);
+                            document.getElementById('responseDisplay').textContent = `Error: ${
+                    error.response ? error.response.data : error.message
+                        }`;
+                        }
+                    }, 2000); // Delay of 2 seconds (2000ms)
+
+                } catch (error) {
+                    console.error('Failed to send SMS:', error);
+                    document.getElementById('responseDisplay').textContent = `Error: ${
+            error.response ? error.response.data : error.message
+                }`;
+                }
+            });
             // Attach click event to Submit button
             mainContainer.appendChild(submitButton);
             return await new Promise((resolve) => {
@@ -406,7 +449,8 @@
                         agencyId: dataInit.idAgencyCode,
                         IdDueDeliverProg: data.IdDueDeliverProg,
                         selectedUsage: selectedUsage,
-                        selectedColor: selectedColor
+                        selectedColor: selectedColor,
+                        agency:dataInit.rows,
                     });
                 });
             });
@@ -417,10 +461,55 @@
     }
 
     async function AddOrderInit(data){
-        payload = {
-
+        const payload = {
+            agency:data.agency,
+            agencyId:parseInt(data.agencyId),
+            agencyShow:2,
+            captchaText:data.captchaanswer,
+            captchaToken:data.captchatoken,
+            idBank:23,
+            idBaseColor:parseInt(data.selectedColor),
+            idBaseUsage:parseInt(data.selectedUsage),
+            quantity:1,
+            responDoc:true,
+            idDueDeliverProg:data.IdDueDeliverProg,
+            smsKey:data.smsInputValue,
+            valueId:generateUUID(),
         }
+        try {
+            const response = await axios.post(addOrderInit, payload, {headers });
+            // Wait until the DOM is fully loaded
+            const data = {
+                identity: response.data.identity// Replace or fetch the real value
+            };
 
+            // Ensure the identity exists in the data
+            if (data.identity) {
+                // Create a form element
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'https://ikc.shaparak.ir/iuiv3/IPG/Index';
+
+                // Add the identity as a hidden input field
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'tokenIdentity';
+                input.value = data.identity;
+                form.appendChild(input);
+
+                // Append the form to the body
+                document.body.appendChild(form);
+
+                // Submit the form
+                console.log('Submitting form with identity:', data.identity);
+                form.submit();
+                console.log('Response:', response.data);
+            }
+            return response.data; // Return the response data
+        } catch (error) {
+            console.error('Error occurred during POST request:', error.response?.data || error.message);
+            throw error; // Re-throw the error to handle it outside this function
+        }
 
     }
     // Add some basic styling for the container
@@ -446,7 +535,7 @@
             const selected = await showItems(data)
             const Init = await OrderInit(selected)
             // Access and log saleProjects from the response
-            console.log(Init)
+            await AddOrderInit(Init)
         } catch (error) {
             console.error('❌ Error in main function:', error.message);
         }
