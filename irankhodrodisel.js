@@ -95,7 +95,9 @@
         let highestSimilarity = 0;
 
         for (const project of saleProjects) {
-            const similarity = calculateSimilarity(searchTerm, project.Title);
+            const combinedTitle = `${project.Title || ''} ${project.KhodroTitle || ''}`;
+            const similarity = calculateSimilarity(searchTerm, combinedTitle);
+
             if (similarity > highestSimilarity) {
                 highestSimilarity = similarity;
                 closestMatch = project.Id;
@@ -244,13 +246,15 @@
                     return;
                 }
 
-                // Filter items based on the search term
-                const filteredItems = saleProjects.filter((item) =>
-                                                          item.Title.toLowerCase().includes(searchTerm)
-                                                         );
+                try {
+                    const closestMatchId = findClosestMatchId(searchTerm, saleProjects);
+                    const filteredItems = saleProjects.filter((item) => item.Id === closestMatchId);
+                    mainContainer.innerHTML = ''; // Clear the main container
 
-                resolve(filteredItems[0]); // Render filtered items
-                mainContainer.innerHTML = ''; // Clear the main container
+                    resolve(filteredItems[0]); // Render filtered items
+                } catch (error) {
+                    console.error("Error finding closest match:", error);
+                }
 
             });
         });
