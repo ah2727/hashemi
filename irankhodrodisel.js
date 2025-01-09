@@ -76,7 +76,34 @@
             return v.toString(16); // Convert to hexadecimal
         });
     }
+    function findClosestMatchId(searchTerm, saleProjects) {
+        if (!searchTerm || !saleProjects || !Array.isArray(saleProjects)) {
+            throw new Error("Invalid input");
+        }
 
+        // Function to calculate similarity between two strings
+        const calculateSimilarity = (str1, str2) => {
+            const commonLength = str1
+            .toLowerCase()
+            .split('')
+            .filter((char) => str2.toLowerCase().includes(char)).length;
+            return commonLength / Math.max(str1.length, str2.length);
+        };
+
+        // Find the closest match
+        let closestMatch = null;
+        let highestSimilarity = 0;
+
+        for (const project of saleProjects) {
+            const similarity = calculateSimilarity(searchTerm, project.Title);
+            if (similarity > highestSimilarity) {
+                highestSimilarity = similarity;
+                closestMatch = project.Id;
+            }
+        }
+
+        return closestMatch;
+    }
     async function showItems(data) {
         return new Promise((resolve) => {
             // Validate data
@@ -99,6 +126,32 @@
             // Clear previous content in the main container
             mainContainer.innerHTML = '';
 
+            // Add search input and button
+            const searchContainer = document.createElement('div');
+            searchContainer.style.display = 'flex';
+            searchContainer.style.marginBottom = '20px';
+
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Search items...';
+            searchInput.style.flex = '1';
+            searchInput.style.padding = '10px';
+            searchInput.style.border = '1px solid #ddd';
+            searchInput.style.borderRadius = '4px 0 0 4px';
+
+            const searchButton = document.createElement('button');
+            searchButton.textContent = 'Search';
+            searchButton.style.padding = '10px 20px';
+            searchButton.style.border = 'none';
+            searchButton.style.borderRadius = '0 4px 4px 0';
+            searchButton.style.backgroundColor = '#007BFF';
+            searchButton.style.color = '#fff';
+            searchButton.style.cursor = 'pointer';
+
+            searchContainer.appendChild(searchInput);
+            searchContainer.appendChild(searchButton);
+            mainContainer.appendChild(searchContainer);
+
             // Create a grid container for items
             const itemsGrid = document.createElement('div');
             itemsGrid.id = 'items-grid';
@@ -107,75 +160,101 @@
             itemsGrid.style.gap = '20px';
             mainContainer.appendChild(itemsGrid);
 
-            // Render items
-            saleProjects.forEach((item) => {
-                // Create a card for each item
-                const itemCard = document.createElement('div');
-                itemCard.style.border = '1px solid #ddd';
-                itemCard.style.borderRadius = '8px';
-                itemCard.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.1)';
-                itemCard.style.padding = '10px';
-                itemCard.style.backgroundColor = '#fff';
-                itemCard.style.textAlign = 'center';
+            // Function to render filtered items
+            function renderItems(items) {
+                // Clear existing items
+                itemsGrid.innerHTML = '';
 
-                // Add image
-                const itemImage = document.createElement('img');
-                itemImage.src = item.ImageSpecification || 'https://via.placeholder.com/250'; // Default image if missing
-                itemImage.alt = item.Title;
-                itemImage.style.width = '100%';
-                itemImage.style.borderRadius = '8px 8px 0 0';
-                itemImage.style.objectFit = 'cover';
-                itemCard.appendChild(itemImage);
+                // Render each item
+                items.forEach((item) => {
+                    // Create a card for each item
+                    const itemCard = document.createElement('div');
+                    itemCard.style.border = '1px solid #ddd';
+                    itemCard.style.borderRadius = '8px';
+                    itemCard.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.1)';
+                    itemCard.style.padding = '10px';
+                    itemCard.style.backgroundColor = '#fff';
+                    itemCard.style.textAlign = 'center';
 
-                // Add item title
-                const itemTitle = document.createElement('h3');
-                itemTitle.textContent = item.Title;
-                itemTitle.style.fontSize = '16px';
-                itemTitle.style.margin = '10px 0';
-                itemCard.appendChild(itemTitle);
+                    // Add image
+                    const itemImage = document.createElement('img');
+                    itemImage.src = item.ImageSpecification || 'https://via.placeholder.com/250';
+                    itemImage.alt = item.Title;
+                    itemImage.style.width = '100%';
+                    itemImage.style.borderRadius = '8px 8px 0 0';
+                    itemImage.style.objectFit = 'cover';
+                    itemCard.appendChild(itemImage);
 
-                // Add price
-                const itemPrice = document.createElement('p');
-                itemPrice.textContent = `Price: ${item.InternetPrice.toLocaleString()} IRR`;
-                itemPrice.style.color = '#007BFF';
-                itemPrice.style.fontSize = '14px';
-                itemCard.appendChild(itemPrice);
+                    // Add item title
+                    const itemTitle = document.createElement('h3');
+                    itemTitle.textContent = item.Title;
+                    itemTitle.style.fontSize = '16px';
+                    itemTitle.style.margin = '10px 0';
+                    itemCard.appendChild(itemTitle);
 
-                // Add delivery info
-                const deliveryInfo = document.createElement('p');
-                deliveryInfo.textContent = `Delivery: ${item.YearDueDeliverTitle}`;
-                deliveryInfo.style.fontSize = '12px';
-                deliveryInfo.style.color = '#555';
-                itemCard.appendChild(deliveryInfo);
+                    // Add price
+                    const itemPrice = document.createElement('p');
+                    itemPrice.textContent = `Price: ${item.InternetPrice.toLocaleString()} IRR`;
+                    itemPrice.style.color = '#007BFF';
+                    itemPrice.style.fontSize = '14px';
+                    itemCard.appendChild(itemPrice);
 
-                // Add a "Select" button
-                const selectButton = document.createElement('button');
-                selectButton.textContent = 'Select';
-                selectButton.style.marginTop = '10px';
-                selectButton.style.padding = '8px 16px';
-                selectButton.style.border = 'none';
-                selectButton.style.borderRadius = '4px';
-                selectButton.style.backgroundColor = '#007BFF';
-                selectButton.style.color = '#fff';
-                selectButton.style.fontSize = '14px';
-                selectButton.style.cursor = 'pointer';
+                    // Add delivery info
+                    const deliveryInfo = document.createElement('p');
+                    deliveryInfo.textContent = `Delivery: ${item.YearDueDeliverTitle}`;
+                    deliveryInfo.style.fontSize = '12px';
+                    deliveryInfo.style.color = '#555';
+                    itemCard.appendChild(deliveryInfo);
 
-                // Add click event to the button
-                selectButton.addEventListener('click', () => {
-                    console.log('Selected Item:', item);
-                    resolve(item); // Resolve the Promise with the selected item
-                    mainContainer.innerHTML = ''
+                    // Add a "Select" button
+                    const selectButton = document.createElement('button');
+                    selectButton.textContent = 'Select';
+                    selectButton.style.marginTop = '10px';
+                    selectButton.style.padding = '8px 16px';
+                    selectButton.style.border = 'none';
+                    selectButton.style.borderRadius = '4px';
+                    selectButton.style.backgroundColor = '#007BFF';
+                    selectButton.style.color = '#fff';
+                    selectButton.style.fontSize = '14px';
+                    selectButton.style.cursor = 'pointer';
+
+                    // Add click event to the button
+                    selectButton.addEventListener('click', () => {
+                        console.log('Selected Item:', item);
+                        resolve(item); // Resolve the Promise with the selected item
+                        mainContainer.innerHTML = ''; // Clear the main container
+                    });
+
+                    // Append the button to the item card
+                    itemCard.appendChild(selectButton);
+
+                    // Append card to grid
+                    itemsGrid.appendChild(itemCard);
                 });
+            }
 
-                // Append the button to the item card
-                itemCard.appendChild(selectButton);
+            // Initial render of all items
+            renderItems(saleProjects);
 
-                // Append card to grid
-                itemsGrid.appendChild(itemCard);
+            // Add event listener to the search button
+            searchButton.addEventListener('click', () => {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                if (!searchTerm) {
+                    renderItems(saleProjects); // Show all items if search term is empty
+                    return;
+                }
+
+                // Filter items based on the search term
+                const filteredItems = saleProjects.filter((item) =>
+                                                          item.Title.toLowerCase().includes(searchTerm)
+                                                         );
+
+                resolve(filteredItems[0]); // Render filtered items
+                mainContainer.innerHTML = ''; // Clear the main container
+
             });
         });
     }
-
     async function sendSms() {
         const payload = {
             smsType: "Order",
@@ -419,9 +498,8 @@
                             // Use a regular expression to extract the numeric code
                             const codeMatch = smsContent.match(/\d+/); // Matches the first sequence of digits
                             const numericCode = codeMatch ? codeMatch[0] : "Code not found"; // Get the first match or fallback
-
+                            smsInputValue = parseInt(numericCode, 10); // Convert numericCode to an integer
                             input.value = numericCode;
-
                             // Optionally display the response on the page
                         } catch (error) {
                             console.error('Failed to fetch last SMS data:', error);
@@ -429,7 +507,7 @@
                     error.response ? error.response.data : error.message
                         }`;
                         }
-                    }, 2000); // Delay of 2 seconds (2000ms)
+                    }, 3000); // Delay of 2 seconds (2000ms)
 
                 } catch (error) {
                     console.error('Failed to send SMS:', error);
