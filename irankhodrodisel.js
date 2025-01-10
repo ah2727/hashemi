@@ -446,30 +446,7 @@
 
             console.log(dataInit); // Log the received data for debugging
 
-            let selectedRow = '';
-            let selectedColor = '';
-            let selectedUsage = '';
 
-            // Create dropdowns for rows, colors, and usages
-            if (dataInit.rows) createDropdown(dataInit.rows, "Row", "rowsDropdown");
-            if (dataInit.colors) createDropdown(dataInit.colors, "Color", "colorsDropdown");
-            if (dataInit.usages) createDropdown(dataInit.usages, "Usage", "usagesDropdown");
-
-            // Add event listeners to track dropdown selections and save values
-            document.getElementById('rowsDropdown')?.addEventListener('change', (event) => {
-                selectedRow = event.target.value;
-                console.log('Row Selected:', selectedRow);
-            });
-
-            document.getElementById('colorsDropdown')?.addEventListener('change', (event) => {
-                selectedColor = event.target.value;
-                console.log('Color Selected:', selectedColor);
-            });
-
-            document.getElementById('usagesDropdown')?.addEventListener('change', (event) => {
-                selectedUsage = event.target.value;
-                console.log('Usage Selected:', selectedUsage);
-            });
             const submitButton = document.createElement('button');
             submitButton.textContent = 'Submit';
             submitButton.style.padding = '10px 20px';
@@ -520,6 +497,9 @@
                 }`;
                 }
             });
+            const filteredRows = dataInit.rows.filter(row => row.label.includes("شیراز"));
+
+
             // Attach click event to Submit button
             mainContainer.appendChild(submitButton);
             return await new Promise((resolve) => {
@@ -530,9 +510,9 @@
                         smsInputValue: smsInputValue,
                         agencyId: dataInit.idAgencyCode,
                         IdDueDeliverProg: data.IdDueDeliverProg,
-                        selectedUsage: selectedUsage,
-                        selectedColor: selectedColor,
-                        agency:dataInit.rows,
+                        selectedUsage: dataInit.usages[0].value,
+                        selectedColor: dataInit.colors[0].value,
+                        agency:filteredRows[0],
                     });
                 });
             });
@@ -610,17 +590,121 @@
         }
     `);
 
-    async function main(){
-        try {
-            // Await the data from getItems
-            const data = await getItems();
-            const selected = await showItems(data)
-            const Init = await OrderInit(selected)
-            // Access and log saleProjects from the response
-            await AddOrderInit(Init)
-        } catch (error) {
-            console.error('❌ Error in main function:', error.message);
+    (async function () {
+        'use strict';
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // Helper to add delay
+
+        let searchTerm = ''; // Variable to store the user's input
+
+        // Create an input field and button for the search term
+        function createSearchInput() {
+            const inputContainer = document.createElement('div');
+            inputContainer.style.position = 'fixed';
+            inputContainer.style.top = '20%';
+            inputContainer.style.right = '50%';
+            inputContainer.style.zIndex = '9999';
+            inputContainer.style.padding = '10px';
+            inputContainer.style.backgroundColor = '#fff';
+            inputContainer.style.border = '1px solid #ddd';
+            inputContainer.style.borderRadius = '8px';
+            inputContainer.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+
+            const inputField = document.createElement('input');
+            inputField.type = 'text';
+            inputField.placeholder = 'Enter item name...';
+            inputField.style.padding = '8px';
+            inputField.style.marginRight = '8px';
+            inputField.style.border = '1px solid #ccc';
+            inputField.style.borderRadius = '4px';
+            inputField.style.width = '200px';
+
+            const searchButton = document.createElement('button');
+            searchButton.textContent = 'Start Search';
+            searchButton.style.padding = '8px 16px';
+            searchButton.style.backgroundColor = '#007BFF';
+            searchButton.style.color = '#fff';
+            searchButton.style.border = 'none';
+            searchButton.style.borderRadius = '4px';
+            searchButton.style.cursor = 'pointer';
+
+            // Handle the input value
+            searchButton.addEventListener('click', () => {
+                searchTerm = inputField.value.trim();
+                if (!searchTerm) {
+                    alert('Please enter an item name!');
+                    return;
+                }
+                console.log('🔍 Search term set:', searchTerm);
+            });
+
+            inputContainer.appendChild(inputField);
+            inputContainer.appendChild(searchButton);
+            container.appendChild(inputContainer);
         }
-    }
-    main()
+
+        // Add the input field to the page
+        createSearchInput();
+
+        async function mainLoop() {
+            let success = false;
+
+            while (!success) {
+                try {
+                    if (!searchTerm) {
+                        console.log('⚠️ Waiting for user to input a search term...');
+                        await delay(2000); // Check every 2 seconds
+                        continue;
+                    }
+
+                    console.log('🔄 Fetching items...');
+                    const data = await getItems();
+                    console.log('📥 Items fetched:', data);
+
+                    // Check if the desired item is available
+                    const saleProjects = data.saleProjects || [];
+                    const closestMatchId = findClosestMatchId(searchTerm, saleProjects);
+
+                    const selectedItem = saleProjects.find((item) => item.Id === closestMatchId);
+                    if (!selectedItem) {
+                        console.log(`⚠️ Item "${searchTerm}" not found. Retrying in 5 seconds...`);
+                        await delay(5000); // Wait 5 seconds before retrying
+                        continue;
+                    }
+
+                    console.log('✅ Desired item found:', selectedItem);
+
+                    // Proceed with order initialization
+                    const Init = await OrderInit(selectedItem);
+                    if (!Init) {
+                        console.log('⚠️ Order initialization failed. Retrying...');
+                        await delay(3000); // Wait 3 seconds before retrying
+                        continue;
+                    }
+
+                    console.log('✅ Order initialized:', Init);
+
+                    // Attempt to add the order
+                    const response = await AddOrderInit(Init);
+                    if (response && response.identity) {
+                        console.log('🎉 Order successfully added:', response);
+                        success = true; // Exit the loop
+                    } else {
+                        console.log('⚠️ Adding order failed. Retrying...');
+                    }
+                } catch (error) {
+                    console.error('❌ Error in main loop:', error.message || error);
+                }
+
+                // Delay before retrying
+                console.log('⏳ Waiting before next attempt...');
+                await delay(5000); // 5 seconds delay before retrying
+            }
+
+            console.log('🏁 Process completed successfully!');
+        }
+
+        // Start the main loop
+        await mainLoop();
+    })();
+
 })();
