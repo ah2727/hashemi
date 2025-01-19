@@ -16,7 +16,7 @@
     //variables
     const targetKey = 'SaleInternet';
     const apiUrlfetchitems = 'https://esale.ikd.ir/api/sales/getSaleProjects';
-    const captchaUrl = 'https://esale.ikd.ir/api/users/getCaptcha';
+    const captchaUrl = 'https://esale.ikd.ir/api/esales/getCaptchaOrder';
     const orderInit= 'https://esale.ikd.ir/api/esales/readSefareshInfo';
     const smsApi = 'https://esale.ikd.ir/api/users/sendSmsOrder';
     const addOrderInit ='https://esale.ikd.ir/api/esales/addSefaresh';
@@ -245,6 +245,7 @@ async function showItems(data) {
 
                     // Resolve with the selected items array
                     resolve(selectedItems);
+                    mainContainer.innerHTML="";
                 });
 
                 // Append the button to the item card
@@ -309,10 +310,7 @@ async function showItems(data) {
     async function getCaptcha(cardId){
         const payload = {
             captchaId: cardId,
-            captchaType: "AgencySelect",
-            saltName: "captchaText",
             token: "", // Add token dynamically if needed
-            valueId: generateUUID(),
         };
         try {
             console.log('🥷 Sending POST request to:', captchaUrl);
@@ -727,7 +725,7 @@ async function showItems(data) {
                     console.log('✅ Desired item selected:', selectedItem);
 
                     // Initialize the order with the selected item
-                    const init = await OrderInit(selectedItem);
+                    const init = await OrderInit(selectedItem[0]);
                     if (!init) {
                         console.log('⚠️ Order initialization failed. Retrying...');
                         await delay(3000); // Wait 3 seconds before retrying
