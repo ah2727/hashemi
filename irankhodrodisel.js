@@ -369,10 +369,10 @@
     async function OrderInit(data) {
         let mainContainer = document.getElementById('main-container');
         const captcha = await getCaptcha(data.IdDueDeliverProg);
-        captchares = await axios.post(`https://khodro.bot1234.online/captcha/`,{svg:captcha.capchaData},  {      headers: {
+        const captchares = await axios.post(`https://khodro.bot1234.online/captcha/`,{svg:captcha.capchaData},  {      headers: {
             'Content-Type': 'application/json',
         }},);
-
+        const captchaanswer = captchares.data.answer
         // Create a container for CAPTCHA and data display
         const container = document.createElement('div');
         container.id = 'captcha-data-container';
@@ -442,6 +442,7 @@
         const input = document.createElement('input');
         input.id = 'customInput';
         input.type = 'text';
+        input.value = captchaanswer
         input.placeholder = 'Enter text here...';
         input.style.padding = '5px';
         input.style.marginRight = '10px';
@@ -449,7 +450,7 @@
         input.style.borderRadius = '3px';
         mainContainer.appendChild(input);
 
-        let smsInputValue = ''; // Variable to store the input value
+        let smsInputValue = captchaanswer; // Variable to store the input value
 
         // Event listener to save the input value into the constant
         input.addEventListener('input', (event) => {
@@ -514,40 +515,40 @@
                             console.error('Failed to fetch last SMS data:', error);
                             document.getElementById('responseDisplay').textContent = `Error: ${
                     error.response ? error.response.data : error.message
-                    }`;
-                    }
-                }, 3000); // Delay of 2 seconds (2000ms)
+                        }`;
+                        }
+                    }, 3000); // Delay of 2 seconds (2000ms)
 
-            } catch (error) {
-                console.error('Failed to send SMS:', error);
-                document.getElementById('responseDisplay').textContent = `Error: ${
+                } catch (error) {
+                    console.error('Failed to send SMS:', error);
+                    document.getElementById('responseDisplay').textContent = `Error: ${
             error.response ? error.response.data : error.message
-                }`;
-                }
-        });
-        const filteredRows = dataInit.rows.filter(row => row.label.includes("شیراز"));
+            }`;
+            }
+            });
+            const filteredRows = dataInit.rows.filter(row => row.label.includes("شیراز"));
 
 
-        // Attach click event to Submit button
-        mainContainer.appendChild(submitButton);
-        return await new Promise((resolve) => {
-            submitButton.addEventListener('click', () => {
-                resolve({
-                    captchatoken: captcha.token,
-                    captchaanswer: captchaAnswer,
-                    smsInputValue: smsInputValue,
-                    agencyId: dataInit.idAgencyCode,
-                    IdDueDeliverProg: data.IdDueDeliverProg,
-                    selectedUsage: dataInit.usages[0].value,
-                    selectedColor: dataInit.colors[0].value,
-                    agency:filteredRows[0],
+            // Attach click event to Submit button
+            mainContainer.appendChild(submitButton);
+            return await new Promise((resolve) => {
+                submitButton.addEventListener('click', () => {
+                    resolve({
+                        captchatoken: captcha.token,
+                        captchaanswer: captchaAnswer,
+                        smsInputValue: smsInputValue,
+                        agencyId: dataInit.idAgencyCode,
+                        IdDueDeliverProg: data.IdDueDeliverProg,
+                        selectedUsage: dataInit.usages[0].value,
+                        selectedColor: dataInit.colors[0].value,
+                        agency:filteredRows[0],
+                    });
                 });
             });
-        });
-    } catch (error) {
-        // Handle errors
-        console.error('Error fetching data:', error);
-    }
+        } catch (error) {
+            // Handle errors
+            console.error('Error fetching data:', error);
+        }
     }
 
     async function AddOrderInit(data){
