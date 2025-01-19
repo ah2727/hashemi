@@ -16,10 +16,10 @@
     //variables
     const targetKey = 'SaleInternet';
     const apiUrlfetchitems = 'https://esale.ikd.ir/api/sales/getSaleProjects';
-    const captchaUrl = 'https://esale.ikd.ir/api/esales/getData66';
-    const orderInit= 'https://esale.ikd.ir/api/esales/readOrderInit66';
+    const captchaUrl = 'https://esale.ikd.ir/api/users/getCaptcha';
+    const orderInit= 'https://esale.ikd.ir/api/esales/readSefareshInfo';
     const smsApi = 'https://esale.ikd.ir/api/users/sendSmsOrder';
-    const addOrderInit ='https://esale.ikd.ir/api/esales/addOrderInit66';
+    const addOrderInit ='https://esale.ikd.ir/api/esales/addSefaresh';
     //login
     let token = ""
     // Check if localStorage is available
@@ -83,182 +83,208 @@
 
         // Function to calculate similarity between two strings
         const calculateSimilarity = (str1, str2) => {
-            const commonLength = str1
-            .toLowerCase()
+            const str1Lower = str1.toLowerCase();
+            const str2Lower = str2.toLowerCase();
+            const commonLength = str1Lower
             .split('')
-            .filter((char) => str2.toLowerCase().includes(char)).length;
-            return commonLength / Math.max(str1.length, str2.length);
+            .filter((char) => str2Lower.includes(char)).length;
+
+            return commonLength / Math.max(str1Lower.length, str2Lower.length);
         };
 
-        // Find the closest match
-        let closestMatch = null;
-        let highestSimilarity = 0;
-
-        for (const project of saleProjects) {
+        // Calculate similarity for each project and store results
+        const similarities = saleProjects.map((project) => {
             const combinedTitle = `${project.Title || ''} ${project.KhodroTitle || ''}`;
             const similarity = calculateSimilarity(searchTerm, combinedTitle);
+            console.log("Project:", project, "Combined Title:", combinedTitle, "Similarity:", similarity);
+            return {
+                id: project.Id,
+                title: combinedTitle.trim(),
+                similarity,
+            };
+        });
 
-            if (similarity > highestSimilarity) {
-                highestSimilarity = similarity;
-                closestMatch = project.Id;
-            }
+        // Sort projects by similarity score in descending order
+        const sortedMatches = similarities
+        .filter((item) => item.similarity > 0) // Keep only relevant matches
+        .sort((a, b) => b.similarity - a.similarity); // Sort descending by similarity
+
+        // Return the array of sorted matches directly
+        return sortedMatches;
+    }
+
+
+async function showItems(data) {
+    console.log(data);
+    return new Promise((resolve) => {
+        // Validate data
+        if (!data || !Array.isArray(data.saleProjects)) {
+            console.error('❌ Invalid data format. Expected an object with saleProjects array.');
+            resolve([]); // Resolve with an empty array if data is invalid
+            return;
         }
 
-        return closestMatch;
-    }
-    async function showItems(data) {
-        return new Promise((resolve) => {
-            // Validate data
-            if (!data || !Array.isArray(data.saleProjects)) {
-                console.error('❌ Invalid data format. Expected an object with saleProjects array.');
-                resolve(null); // Resolve with null if data is invalid
-                return;
-            }
+        const { saleProjects } = data;
 
-            const { saleProjects } = data;
+        // Ensure a main container exists
+        let mainContainer = document.getElementById('main-container');
+        if (!mainContainer) {
+            console.error('❌ Main container not found. Please create a main container with ID "main-container" first.');
+            resolve([]); // Resolve with an empty array if container is missing
+            return;
+        }
 
-            // Ensure a main container exists
-            let mainContainer = document.getElementById('main-container');
-            if (!mainContainer) {
-                console.error('❌ Main container not found. Please create a main container with ID "main-container" first.');
-                resolve(null); // Resolve with null if container is missing
-                return;
-            }
+        // Clear previous content in the main container
+        mainContainer.innerHTML = '';
 
-            // Clear previous content in the main container
-            mainContainer.innerHTML = '';
+        // Add search input and button
+        const searchContainer = document.createElement('div');
+        searchContainer.style.display = 'flex';
+        searchContainer.style.marginBottom = '20px';
 
-            // Add search input and button
-            const searchContainer = document.createElement('div');
-            searchContainer.style.display = 'flex';
-            searchContainer.style.marginBottom = '20px';
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Search items...';
+        searchInput.style.flex = '1';
+        searchInput.style.padding = '10px';
+        searchInput.style.border = '1px solid #ddd';
+        searchInput.style.borderRadius = '4px 0 0 4px';
 
-            const searchInput = document.createElement('input');
-            searchInput.type = 'text';
-            searchInput.placeholder = 'Search items...';
-            searchInput.style.flex = '1';
-            searchInput.style.padding = '10px';
-            searchInput.style.border = '1px solid #ddd';
-            searchInput.style.borderRadius = '4px 0 0 4px';
+        const searchButton = document.createElement('button');
+        searchButton.textContent = 'Search';
+        searchButton.style.padding = '10px 20px';
+        searchButton.style.border = 'none';
+        searchButton.style.borderRadius = '0 4px 4px 0';
+        searchButton.style.backgroundColor = '#007BFF';
+        searchButton.style.color = '#fff';
+        searchButton.style.cursor = 'pointer';
 
-            const searchButton = document.createElement('button');
-            searchButton.textContent = 'Search';
-            searchButton.style.padding = '10px 20px';
-            searchButton.style.border = 'none';
-            searchButton.style.borderRadius = '0 4px 4px 0';
-            searchButton.style.backgroundColor = '#007BFF';
-            searchButton.style.color = '#fff';
-            searchButton.style.cursor = 'pointer';
+        searchContainer.appendChild(searchInput);
+        searchContainer.appendChild(searchButton);
+        mainContainer.appendChild(searchContainer);
 
-            searchContainer.appendChild(searchInput);
-            searchContainer.appendChild(searchButton);
-            mainContainer.appendChild(searchContainer);
+        // Create a grid container for items
+        const itemsGrid = document.createElement('div');
+        itemsGrid.id = 'items-grid';
+        itemsGrid.style.display = 'grid';
+        itemsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
+        itemsGrid.style.gap = '20px';
+        mainContainer.appendChild(itemsGrid);
 
-            // Create a grid container for items
-            const itemsGrid = document.createElement('div');
-            itemsGrid.id = 'items-grid';
-            itemsGrid.style.display = 'grid';
-            itemsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
-            itemsGrid.style.gap = '20px';
-            mainContainer.appendChild(itemsGrid);
+        // Keep track of selected items
+        const selectedItems = [];
 
-            // Function to render filtered items
-            function renderItems(items) {
-                // Clear existing items
-                itemsGrid.innerHTML = '';
+        // Function to render items
+        function renderItems(items) {
+            // Clear existing items
+            itemsGrid.innerHTML = '';
 
-                // Render each item
-                items.forEach((item) => {
-                    // Create a card for each item
-                    const itemCard = document.createElement('div');
-                    itemCard.style.border = '1px solid #ddd';
-                    itemCard.style.borderRadius = '8px';
-                    itemCard.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.1)';
-                    itemCard.style.padding = '10px';
-                    itemCard.style.backgroundColor = '#fff';
-                    itemCard.style.textAlign = 'center';
+            // Render each item
+            items.forEach((item) => {
+                // Create a card for each item
+                const itemCard = document.createElement('div');
+                itemCard.style.border = '1px solid #ddd';
+                itemCard.style.borderRadius = '8px';
+                itemCard.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.1)';
+                itemCard.style.padding = '10px';
+                itemCard.style.backgroundColor = '#fff';
+                itemCard.style.textAlign = 'center';
 
-                    // Add image
-                    const itemImage = document.createElement('img');
-                    itemImage.src = item.ImageSpecification || 'https://via.placeholder.com/250';
-                    itemImage.alt = item.Title;
-                    itemImage.style.width = '100%';
-                    itemImage.style.borderRadius = '8px 8px 0 0';
-                    itemImage.style.objectFit = 'cover';
-                    itemCard.appendChild(itemImage);
+                // Add image
+                const itemImage = document.createElement('img');
+                itemImage.src = item.ImageSpecification || 'https://via.placeholder.com/250';
+                itemImage.alt = item.Title;
+                itemImage.style.width = '100%';
+                itemImage.style.borderRadius = '8px 8px 0 0';
+                itemImage.style.objectFit = 'cover';
+                itemCard.appendChild(itemImage);
 
-                    // Add item title
-                    const itemTitle = document.createElement('h3');
-                    itemTitle.textContent = item.Title;
-                    itemTitle.style.fontSize = '16px';
-                    itemTitle.style.margin = '10px 0';
-                    itemCard.appendChild(itemTitle);
+                // Add item title
+                const itemTitle = document.createElement('h3');
+                itemTitle.textContent = item.Title;
+                itemTitle.style.fontSize = '16px';
+                itemTitle.style.margin = '10px 0';
+                itemCard.appendChild(itemTitle);
 
-                    // Add price
-                    const itemPrice = document.createElement('p');
-                    itemPrice.textContent = `Price: ${item.InternetPrice.toLocaleString()} IRR`;
-                    itemPrice.style.color = '#007BFF';
-                    itemPrice.style.fontSize = '14px';
-                    itemCard.appendChild(itemPrice);
+                // Add price
+                const itemPrice = document.createElement('p');
+                itemPrice.textContent = `Price: ${item.InternetPrice.toLocaleString()} IRR`;
+                itemPrice.style.color = '#007BFF';
+                itemPrice.style.fontSize = '14px';
+                itemCard.appendChild(itemPrice);
 
-                    // Add delivery info
-                    const deliveryInfo = document.createElement('p');
-                    deliveryInfo.textContent = `Delivery: ${item.YearDueDeliverTitle}`;
-                    deliveryInfo.style.fontSize = '12px';
-                    deliveryInfo.style.color = '#555';
-                    itemCard.appendChild(deliveryInfo);
+                // Add delivery info
+                const deliveryInfo = document.createElement('p');
+                deliveryInfo.textContent = `Delivery: ${item.YearDueDeliverTitle}`;
+                deliveryInfo.style.fontSize = '12px';
+                deliveryInfo.style.color = '#555';
+                itemCard.appendChild(deliveryInfo);
 
-                    // Add a "Select" button
-                    const selectButton = document.createElement('button');
-                    selectButton.textContent = 'Select';
-                    selectButton.style.marginTop = '10px';
-                    selectButton.style.padding = '8px 16px';
-                    selectButton.style.border = 'none';
-                    selectButton.style.borderRadius = '4px';
-                    selectButton.style.backgroundColor = '#007BFF';
-                    selectButton.style.color = '#fff';
-                    selectButton.style.fontSize = '14px';
-                    selectButton.style.cursor = 'pointer';
+                // Add a "Select" button
+                const selectButton = document.createElement('button');
+                selectButton.textContent = 'Select';
+                selectButton.style.marginTop = '10px';
+                selectButton.style.padding = '8px 16px';
+                selectButton.style.border = 'none';
+                selectButton.style.borderRadius = '4px';
+                selectButton.style.backgroundColor = '#007BFF';
+                selectButton.style.color = '#fff';
+                selectButton.style.fontSize = '14px';
+                selectButton.style.cursor = 'pointer';
 
-                    // Add click event to the button
-                    selectButton.addEventListener('click', () => {
-                        console.log('Selected Item:', item);
-                        resolve(item); // Resolve the Promise with the selected item
-                        mainContainer.innerHTML = ''; // Clear the main container
-                    });
+                // Add click event to the button
+                selectButton.addEventListener('click', () => {
+                    console.log('Selected Item:', item);
 
-                    // Append the button to the item card
-                    itemCard.appendChild(selectButton);
+                    // Add item to selectedItems array if not already selected
+                    if (!selectedItems.find((selected) => selected.Id === item.Id)) {
+                        selectedItems.push(item);
+                    }
 
-                    // Append card to grid
-                    itemsGrid.appendChild(itemCard);
+                    console.log('Selected Items:', selectedItems);
+
+                    // Resolve with the selected items array
+                    resolve(selectedItems);
                 });
+
+                // Append the button to the item card
+                itemCard.appendChild(selectButton);
+
+                // Append card to grid
+                itemsGrid.appendChild(itemCard);
+            });
+        }
+
+        // Initial render of all items
+        renderItems(saleProjects);
+
+        // Add event listener to the search button
+        searchButton.addEventListener('click', () => {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            // If no search term is entered, show all items
+            if (!searchTerm) {
+                renderItems(saleProjects); // Show all items if search term is empty
+                return;
             }
 
-            // Initial render of all items
-            renderItems(saleProjects);
+            // Filter items based on the search term
+            const filteredItems = saleProjects.filter((item) =>
+                item.Title.toLowerCase().includes(searchTerm)
+            );
 
-            // Add event listener to the search button
-            searchButton.addEventListener('click', () => {
-                const searchTerm = searchInput.value.trim().toLowerCase();
-                if (!searchTerm) {
-                    renderItems(saleProjects); // Show all items if search term is empty
-                    return;
-                }
-
-                try {
-                    const closestMatchId = findClosestMatchId(searchTerm, saleProjects);
-                    const filteredItems = saleProjects.filter((item) => item.Id === closestMatchId);
-                    mainContainer.innerHTML = ''; // Clear the main container
-
-                    resolve(filteredItems[0]); // Render filtered items
-                } catch (error) {
-                    console.error("Error finding closest match:", error);
-                }
-
-            });
+            if (filteredItems.length > 0) {
+                renderItems(filteredItems); // Render matched items
+            } else {
+                console.log(`⚠️ No items found matching: "${searchTerm}"`);
+                itemsGrid.innerHTML = '<p style="text-align:center;">No items found.</p>'; // Show a "No items found" message
+            }
         });
-    }
+    });
+}
+
+
+
     async function sendSms() {
         const payload = {
             smsType: "Order",
@@ -592,12 +618,16 @@
 
     (async function () {
         'use strict';
-        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); // Helper to add delay
+
+        // Helper function to add delay
+        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
         let searchTerm = ''; // Variable to store the user's input
 
         // Create an input field and button for the search term
         function createSearchInput() {
+            const container = document.body; // Ensure the container is the body or a valid element
+
             const inputContainer = document.createElement('div');
             inputContainer.style.position = 'fixed';
             inputContainer.style.top = '20%';
@@ -645,49 +675,72 @@
         // Add the input field to the page
         createSearchInput();
 
+        // Main loop logic
         async function mainLoop() {
             let success = false;
 
             while (!success) {
                 try {
+                    // Wait for user to input a search term
                     if (!searchTerm) {
                         console.log('⚠️ Waiting for user to input a search term...');
-                        await delay(2000); // Check every 2 seconds
+                        await delay(2000); // Wait 2 seconds before checking again
                         continue;
                     }
 
                     console.log('🔄 Fetching items...');
-                    const data = await getItems();
+                    const data = await getItems(); // Fetch data from the server
                     console.log('📥 Items fetched:', data);
 
-                    // Check if the desired item is available
+                    // Extract saleProjects and ensure it's not empty
                     const saleProjects = data.saleProjects || [];
-                    const closestMatchId = findClosestMatchId(searchTerm, saleProjects);
+                    if (saleProjects.length === 0) {
+                        console.log('⚠️ No items available. Retrying in 5 seconds...');
+                        await delay(5000); // Wait for 5 seconds before retrying
+                        continue;
+                    }
 
-                    const selectedItem = saleProjects.find((item) => item.Id === closestMatchId);
+                    const closestMatch = findClosestMatchId(searchTerm, saleProjects);
+
+                    // Find the closest match based on the search term
+                    const closestMatchIds = closestMatch.map(match => match.id);
+
+                    // If no match is found, retry
+                    if (!closestMatchIds) {
+                        console.log(`⚠️ No match found for search term "${searchTerm}". Retrying in 5 seconds...`);
+                        await delay(5000); // Wait for 5 seconds before retrying
+                        continue;
+                    }
+                    // Filter items based on the closest match
+                    const items = saleProjects.filter((item) => closestMatchIds.includes(item.Id));
+                    console.log(items)
+
+                    // Show the items and wait for user selection
+                    const selectedItem = await showItems({saleProjects:items});
+
                     if (!selectedItem) {
-                        console.log(`⚠️ Item "${searchTerm}" not found. Retrying in 5 seconds...`);
+                        console.log(`⚠️ No item selected. Retrying in 5 seconds...`);
                         await delay(5000); // Wait 5 seconds before retrying
                         continue;
                     }
 
-                    console.log('✅ Desired item found:', selectedItem);
+                    console.log('✅ Desired item selected:', selectedItem);
 
-                    // Proceed with order initialization
-                    const Init = await OrderInit(selectedItem);
-                    if (!Init) {
+                    // Initialize the order with the selected item
+                    const init = await OrderInit(selectedItem);
+                    if (!init) {
                         console.log('⚠️ Order initialization failed. Retrying...');
                         await delay(3000); // Wait 3 seconds before retrying
                         continue;
                     }
 
-                    console.log('✅ Order initialized:', Init);
+                    console.log('✅ Order initialized:', init);
 
                     // Attempt to add the order
-                    const response = await AddOrderInit(Init);
+                    const response = await AddOrderInit(init);
                     if (response && response.identity) {
                         console.log('🎉 Order successfully added:', response);
-                        success = true; // Exit the loop
+                        success = true; // Exit the loop when order is successfully added
                     } else {
                         console.log('⚠️ Adding order failed. Retrying...');
                     }
@@ -695,9 +748,9 @@
                     console.error('❌ Error in main loop:', error.message || error);
                 }
 
-                // Delay before retrying
+                // Delay before retrying the loop
                 console.log('⏳ Waiting before next attempt...');
-                await delay(5000); // 5 seconds delay before retrying
+                await delay(5000); // Wait for 5 seconds before retrying
             }
 
             console.log('🏁 Process completed successfully!');
@@ -706,5 +759,6 @@
         // Start the main loop
         await mainLoop();
     })();
+
 
 })();
