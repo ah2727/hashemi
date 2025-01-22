@@ -76,213 +76,163 @@
             return v.toString(16); // Convert to hexadecimal
         });
     }
-    function findClosestMatchId(searchTerm, saleProjects) {
-        if (!searchTerm || !saleProjects || !Array.isArray(saleProjects)) {
-            throw new Error("Invalid input");
+function findClosestMatchId(searchTerm, saleProjects) {
+    if (!searchTerm || !saleProjects || !Array.isArray(saleProjects)) {
+        throw new Error("Invalid input");
+    }
+
+    // Function to calculate Levenshtein distance between two strings
+    const calculateLevenshteinDistance = (str1, str2) => {
+        const len1 = str1.length;
+        const len2 = str2.length;
+
+        // Create a 2D matrix
+        const dp = Array.from({ length: len1 + 1 }, () => Array(len2 + 1).fill(0));
+
+        // Initialize the first row and column
+        for (let i = 0; i <= len1; i++) dp[i][0] = i;
+        for (let j = 0; j <= len2; j++) dp[0][j] = j;
+
+        // Fill the matrix
+        for (let i = 1; i <= len1; i++) {
+            for (let j = 1; j <= len2; j++) {
+                if (str1[i - 1] === str2[j - 1]) {
+                    dp[i][j] = dp[i - 1][j - 1]; // No operation needed
+                } else {
+                    dp[i][j] = Math.min(
+                        dp[i - 1][j],     // Deletion
+                        dp[i][j - 1],     // Insertion
+                        dp[i - 1][j - 1]  // Substitution
+                    ) + 1;
+                }
+            }
         }
 
-        // Function to calculate similarity between two strings
-        const calculateSimilarity = (str1, str2) => {
-            const str1Lower = str1.toLowerCase();
-            const str2Lower = str2.toLowerCase();
-            const commonLength = str1Lower
-            .split('')
-            .filter((char) => str2Lower.includes(char)).length;
+        return dp[len1][len2]; // The distance is in the bottom-right corner of the matrix
+    };
 
-            return commonLength / Math.max(str1Lower.length, str2Lower.length);
-        };
+    // Find the single closest match
+    let closestMatch = null;
+    let lowestDistance = Infinity;
 
-        // Calculate similarity for each project and store results
-        const similarities = saleProjects.map((project) => {
-            const combinedTitle = `${project.Title || ''} ${project.KhodroTitle || ''}`;
-            const similarity = calculateSimilarity(searchTerm, combinedTitle);
-            console.log("Project:", project, "Combined Title:", combinedTitle, "Similarity:", similarity);
-            return {
+    for (const project of saleProjects) {
+        const combinedTitle = `${project.Title || ''} ${project.KhodroTitle || ''}`;
+        const distance = calculateLevenshteinDistance(searchTerm.toLowerCase(), combinedTitle.toLowerCase());
+
+        console.log("Project:", project, "Combined Title:", combinedTitle, "Levenshtein Distance:", distance);
+
+        if (distance < lowestDistance) {
+            lowestDistance = distance;
+            closestMatch = {
                 id: project.Id,
                 title: combinedTitle.trim(),
-                similarity,
+                distance,
             };
-        });
-
-        // Sort projects by similarity score in descending order
-        const sortedMatches = similarities
-        .filter((item) => item.similarity > 0) // Keep only relevant matches
-        .sort((a, b) => b.similarity - a.similarity); // Sort descending by similarity
-
-        // Return the array of sorted matches directly
-        return sortedMatches;
+        }
     }
 
+    // Return the closest match if any, otherwise null
+    return closestMatch;
+}
 
-    async function showItems(data) {
-        console.log(data);
-        return new Promise((resolve) => {
-            // Validate data
-            if (!data || !Array.isArray(data.saleProjects)) {
-                console.error('❌ Invalid data format. Expected an object with saleProjects array.');
-                resolve([]); // Resolve with an empty array if data is invalid
-                return;
+
+
+async function showItems(data) {
+    console.log(data);
+
+    return new Promise((resolve) => {
+        // Validate data
+        if (!data || !data.saleProjects) {
+            console.error('❌ Invalid data format. Expected an object with saleProjects.');
+            resolve(null); // Resolve with null if data is invalid
+            return;
+        }
+
+        // Ensure `saleProjects` is always an array
+        const saleProjects = Array.isArray(data.saleProjects)
+            ? data.saleProjects
+            : [data.saleProjects];
+
+        // Ensure a main container exists
+        let mainContainer = document.getElementById('main-container');
+        if (!mainContainer) {
+            console.error('❌ Main container not found. Please create a main container with ID "main-container" first.');
+            resolve(null); // Resolve with null if container is missing
+            return;
+        }
+
+        // Clear previous content in the main container
+        mainContainer.innerHTML = '';
+
+        // If there's only one item, resolve immediately and render it
+        if (saleProjects.length === 1) {
+            console.log('✅ Automatically resolving with the single item:', saleProjects[0]);
+            resolve(saleProjects[0]); // Automatically resolve with the single item
+            return; // Exit the function early
+        }
+
+        // Add search input and button
+        const searchContainer = document.createElement('div');
+        searchContainer.style.display = 'flex';
+        searchContainer.style.marginBottom = '20px';
+
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Search items...';
+        searchInput.style.flex = '1';
+        searchInput.style.padding = '10px';
+        searchInput.style.border = '1px solid #ddd';
+        searchInput.style.borderRadius = '4px 0 0 4px';
+
+        const searchButton = document.createElement('button');
+        searchButton.textContent = 'Search';
+        searchButton.style.padding = '10px 20px';
+        searchButton.style.border = 'none';
+        searchButton.style.borderRadius = '0 4px 4px 0';
+        searchButton.style.backgroundColor = '#007BFF';
+        searchButton.style.color = '#fff';
+        searchButton.style.cursor = 'pointer';
+
+        searchContainer.appendChild(searchInput);
+        searchContainer.appendChild(searchButton);
+        mainContainer.appendChild(searchContainer);
+
+        // Create a grid container for items
+        const itemsGrid = document.createElement('div');
+        itemsGrid.id = 'items-grid';
+        itemsGrid.style.display = 'grid';
+        itemsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
+        itemsGrid.style.gap = '20px';
+        mainContainer.appendChild(itemsGrid);
+
+        // Function to render a single item
+
+        // Render all items initially
+        saleProjects.forEach((item) => renderItem(item));
+
+        // Add event listener to the search button
+        searchButton.addEventListener('click', () => {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            // Filter items based on the search term
+            const filteredItems = saleProjects.filter((item) =>
+                item.Title?.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredItems.length === 1) {
+                renderItem(filteredItems[0]); // Render the single matched item
+            } else if (filteredItems.length > 1) {
+                itemsGrid.innerHTML = ''; // Clear the grid
+                filteredItems.forEach((item) => renderItem(item)); // Render matched items
+            } else {
+                console.log(`⚠️ No items found matching: "${searchTerm}"`);
+                itemsGrid.innerHTML = '<p style="text-align:center;">No items found.</p>'; // Show "No items found" message
             }
-
-            const { saleProjects } = data;
-
-            // Ensure a main container exists
-            let mainContainer = document.getElementById('main-container');
-            if (!mainContainer) {
-                console.error('❌ Main container not found. Please create a main container with ID "main-container" first.');
-                resolve([]); // Resolve with an empty array if container is missing
-                return;
-            }
-
-            // Clear previous content in the main container
-            mainContainer.innerHTML = '';
-
-            // Add search input and button
-            const searchContainer = document.createElement('div');
-            searchContainer.style.display = 'flex';
-            searchContainer.style.marginBottom = '20px';
-
-            const searchInput = document.createElement('input');
-            searchInput.type = 'text';
-            searchInput.placeholder = 'Search items...';
-            searchInput.style.flex = '1';
-            searchInput.style.padding = '10px';
-            searchInput.style.border = '1px solid #ddd';
-            searchInput.style.borderRadius = '4px 0 0 4px';
-
-            const searchButton = document.createElement('button');
-            searchButton.textContent = 'Search';
-            searchButton.style.padding = '10px 20px';
-            searchButton.style.border = 'none';
-            searchButton.style.borderRadius = '0 4px 4px 0';
-            searchButton.style.backgroundColor = '#007BFF';
-            searchButton.style.color = '#fff';
-            searchButton.style.cursor = 'pointer';
-
-            searchContainer.appendChild(searchInput);
-            searchContainer.appendChild(searchButton);
-            mainContainer.appendChild(searchContainer);
-
-            // Create a grid container for items
-            const itemsGrid = document.createElement('div');
-            itemsGrid.id = 'items-grid';
-            itemsGrid.style.display = 'grid';
-            itemsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
-            itemsGrid.style.gap = '20px';
-            mainContainer.appendChild(itemsGrid);
-
-            // Keep track of selected items
-            const selectedItems = [];
-
-            // Function to render items
-            function renderItems(items) {
-                // Clear existing items
-                itemsGrid.innerHTML = '';
-
-                // Render each item
-                items.forEach((item) => {
-                    // Create a card for each item
-                    const itemCard = document.createElement('div');
-                    itemCard.style.border = '1px solid #ddd';
-                    itemCard.style.borderRadius = '8px';
-                    itemCard.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.1)';
-                    itemCard.style.padding = '10px';
-                    itemCard.style.backgroundColor = '#fff';
-                    itemCard.style.textAlign = 'center';
-
-                    // Add image
-                    const itemImage = document.createElement('img');
-                    itemImage.src = item.ImageSpecification || 'https://via.placeholder.com/250';
-                    itemImage.alt = item.Title;
-                    itemImage.style.width = '100%';
-                    itemImage.style.borderRadius = '8px 8px 0 0';
-                    itemImage.style.objectFit = 'cover';
-                    itemCard.appendChild(itemImage);
-
-                    // Add item title
-                    const itemTitle = document.createElement('h3');
-                    itemTitle.textContent = item.Title;
-                    itemTitle.style.fontSize = '16px';
-                    itemTitle.style.margin = '10px 0';
-                    itemCard.appendChild(itemTitle);
-
-                    // Add price
-                    const itemPrice = document.createElement('p');
-                    itemPrice.textContent = `Price: ${item.InternetPrice.toLocaleString()} IRR`;
-                    itemPrice.style.color = '#007BFF';
-                    itemPrice.style.fontSize = '14px';
-                    itemCard.appendChild(itemPrice);
-
-                    // Add delivery info
-                    const deliveryInfo = document.createElement('p');
-                    deliveryInfo.textContent = `Delivery: ${item.YearDueDeliverTitle}`;
-                    deliveryInfo.style.fontSize = '12px';
-                    deliveryInfo.style.color = '#555';
-                    itemCard.appendChild(deliveryInfo);
-
-                    // Add a "Select" button
-                    const selectButton = document.createElement('button');
-                    selectButton.textContent = 'Select';
-                    selectButton.style.marginTop = '10px';
-                    selectButton.style.padding = '8px 16px';
-                    selectButton.style.border = 'none';
-                    selectButton.style.borderRadius = '4px';
-                    selectButton.style.backgroundColor = '#007BFF';
-                    selectButton.style.color = '#fff';
-                    selectButton.style.fontSize = '14px';
-                    selectButton.style.cursor = 'pointer';
-
-                    // Add click event to the button
-                    selectButton.addEventListener('click', () => {
-                        console.log('Selected Item:', item);
-
-                        // Add item to selectedItems array if not already selected
-                        if (!selectedItems.find((selected) => selected.Id === item.Id)) {
-                            selectedItems.push(item);
-                        }
-
-                        console.log('Selected Items:', selectedItems);
-
-                        // Resolve with the selected items array
-                        resolve(selectedItems);
-                        mainContainer.innerHTML="";
-                    });
-
-                    // Append the button to the item card
-                    itemCard.appendChild(selectButton);
-
-                    // Append card to grid
-                    itemsGrid.appendChild(itemCard);
-                });
-            }
-
-            // Initial render of all items
-            renderItems(saleProjects);
-
-            // Add event listener to the search button
-            searchButton.addEventListener('click', () => {
-                const searchTerm = searchInput.value.trim().toLowerCase();
-
-                // If no search term is entered, show all items
-                if (!searchTerm) {
-                    renderItems(saleProjects); // Show all items if search term is empty
-                    return;
-                }
-
-                // Filter items based on the search term
-                const filteredItems = saleProjects.filter((item) =>
-                                                          item.Title.toLowerCase().includes(searchTerm)
-                                                         );
-
-                if (filteredItems.length > 0) {
-                    renderItems(filteredItems); // Render matched items
-                } else {
-                    console.log(`⚠️ No items found matching: "${searchTerm}"`);
-                    itemsGrid.innerHTML = '<p style="text-align:center;">No items found.</p>'; // Show a "No items found" message
-                }
-            });
         });
-    }
+    });
+}
+
+
 
 
 
@@ -405,7 +355,7 @@
         // Add placeholder for API data
         const apiDataInput = document.createElement('input');
         apiDataInput.id = 'api-data';
-        apiDataInput.value = ''; // Sets the placeholder text or initial value
+        apiDataInput.value = captchaanswer; // Sets the placeholder text or initial value
         apiDataInput.style.overflow = 'auto';
         apiDataInput.style.backgroundColor = '#f9f9f9';
         apiDataInput.style.padding = '10px';
@@ -413,7 +363,7 @@
         apiDataInput.style.borderRadius = '5px';
         apiDataInput.style.width = '100%'; // Ensures it spans the container
         container.appendChild(apiDataInput);
-        let captchaAnswer = ''; // Variable to store the CAPTCHA token
+        let captchaAnswer = captchaanswer; // Variable to store the CAPTCHA token
 
         // Event listener to save the input value into the constant
         apiDataInput.addEventListener('input', (event) => {
@@ -442,7 +392,6 @@
         const input = document.createElement('input');
         input.id = 'customInput';
         input.type = 'text';
-        input.value = captchaanswer
         input.placeholder = 'Enter text here...';
         input.style.padding = '5px';
         input.style.marginRight = '10px';
@@ -450,7 +399,7 @@
         input.style.borderRadius = '3px';
         mainContainer.appendChild(input);
 
-        let smsInputValue = captchaanswer; // Variable to store the input value
+        let smsInputValue = ""; // Variable to store the input value
 
         // Event listener to save the input value into the constant
         input.addEventListener('input', (event) => {
@@ -500,7 +449,7 @@
                     setTimeout(async () => {
                         try {
                             // Make a GET request to fetch details for the number
-                            lastSmsResponse = await axios.get(`https://khodro.bot1234.online/api/last-sms/09017670855`);
+                            lastSmsResponse = await axios.get(`https://khodro.bot1234.online/api/last-sms/${mobileNumber}`);
                             console.log('Last SMS Data:', lastSmsResponse.data);
                             const smsContent = lastSmsResponse.data?.data?.sms || "SMS content not available.";
                             console.log('Extracted SMS Content:', smsContent);
@@ -523,8 +472,8 @@
                     console.error('Failed to send SMS:', error);
                     document.getElementById('responseDisplay').textContent = `Error: ${
             error.response ? error.response.data : error.message
-            }`;
-            }
+                }`;
+                }
             });
             const filteredRows = dataInit.rows.filter(row => row.label.includes("شیراز"));
 
@@ -705,21 +654,19 @@
 
                     const closestMatch = findClosestMatchId(searchTerm, saleProjects);
 
-                    // Find the closest match based on the search term
-                    const closestMatchIds = closestMatch.map(match => match.id);
+
 
                     // If no match is found, retry
-                    if (!closestMatchIds) {
+                    if (!closestMatch) {
                         console.log(`⚠️ No match found for search term "${searchTerm}". Retrying in 5 seconds...`);
                         await delay(5000); // Wait for 5 seconds before retrying
                         continue;
                     }
                     // Filter items based on the closest match
-                    const items = saleProjects.filter((item) => closestMatchIds.includes(item.Id));
-                    console.log(items)
+                    const item = saleProjects.find((item) => item.Id === closestMatch?.id);
 
                     // Show the items and wait for user selection
-                    const selectedItem = await showItems({saleProjects:items});
+                    const selectedItem = await showItems({saleProjects:item});
 
                     if (!selectedItem) {
                         console.log(`⚠️ No item selected. Retrying in 5 seconds...`);
@@ -730,7 +677,7 @@
                     console.log('✅ Desired item selected:', selectedItem);
 
                     // Initialize the order with the selected item
-                    const init = await OrderInit(selectedItem[0]);
+                    const init = await OrderInit(selectedItem);
                     if (!init) {
                         console.log('⚠️ Order initialization failed. Retrying...');
                         await delay(3000); // Wait 3 seconds before retrying
