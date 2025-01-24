@@ -16,10 +16,11 @@
     //variables
     const targetKey = 'SaleInternet';
     const apiUrlfetchitems = 'https://esale.ikd.ir/api/sales/getSaleProjects';
-    const captchaUrl = 'https://esale.ikd.ir/api/esales/getCaptchaOrder';
+    const captchaUrl = 'https://esale.ikd.ir/api/users/getCaptchaLogin';
     const orderInit= 'https://esale.ikd.ir/api/esales/readSefareshInfo';
     const smsApi = 'https://esale.ikd.ir/api/users/sendSmsOrder';
     const addOrderInit ='https://esale.ikd.ir/api/esales/addSefaresh';
+    const getData = 'https://esale.ikd.ir/api/users/getDate'
     //login
     let token = ""
     // Check if localStorage is available
@@ -76,161 +77,161 @@
             return v.toString(16); // Convert to hexadecimal
         });
     }
-function findClosestMatchId(searchTerm, saleProjects) {
-    if (!searchTerm || !saleProjects || !Array.isArray(saleProjects)) {
-        throw new Error("Invalid input");
-    }
+    function findClosestMatchId(searchTerm, saleProjects) {
+        if (!searchTerm || !saleProjects || !Array.isArray(saleProjects)) {
+            throw new Error("Invalid input");
+        }
 
-    // Function to calculate Levenshtein distance between two strings
-    const calculateLevenshteinDistance = (str1, str2) => {
-        const len1 = str1.length;
-        const len2 = str2.length;
+        // Function to calculate Levenshtein distance between two strings
+        const calculateLevenshteinDistance = (str1, str2) => {
+            const len1 = str1.length;
+            const len2 = str2.length;
 
-        // Create a 2D matrix
-        const dp = Array.from({ length: len1 + 1 }, () => Array(len2 + 1).fill(0));
+            // Create a 2D matrix
+            const dp = Array.from({ length: len1 + 1 }, () => Array(len2 + 1).fill(0));
 
-        // Initialize the first row and column
-        for (let i = 0; i <= len1; i++) dp[i][0] = i;
-        for (let j = 0; j <= len2; j++) dp[0][j] = j;
+            // Initialize the first row and column
+            for (let i = 0; i <= len1; i++) dp[i][0] = i;
+            for (let j = 0; j <= len2; j++) dp[0][j] = j;
 
-        // Fill the matrix
-        for (let i = 1; i <= len1; i++) {
-            for (let j = 1; j <= len2; j++) {
-                if (str1[i - 1] === str2[j - 1]) {
-                    dp[i][j] = dp[i - 1][j - 1]; // No operation needed
-                } else {
-                    dp[i][j] = Math.min(
-                        dp[i - 1][j],     // Deletion
-                        dp[i][j - 1],     // Insertion
-                        dp[i - 1][j - 1]  // Substitution
-                    ) + 1;
+            // Fill the matrix
+            for (let i = 1; i <= len1; i++) {
+                for (let j = 1; j <= len2; j++) {
+                    if (str1[i - 1] === str2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1]; // No operation needed
+                    } else {
+                        dp[i][j] = Math.min(
+                            dp[i - 1][j],     // Deletion
+                            dp[i][j - 1],     // Insertion
+                            dp[i - 1][j - 1]  // Substitution
+                        ) + 1;
+                    }
                 }
+            }
+
+            return dp[len1][len2]; // The distance is in the bottom-right corner of the matrix
+        };
+
+        // Find the single closest match
+        let closestMatch = null;
+        let lowestDistance = Infinity;
+
+        for (const project of saleProjects) {
+            const combinedTitle = `${project.Title || ''} ${project.KhodroTitle || ''}`;
+            const distance = calculateLevenshteinDistance(searchTerm.toLowerCase(), combinedTitle.toLowerCase());
+
+            console.log("Project:", project, "Combined Title:", combinedTitle, "Levenshtein Distance:", distance);
+
+            if (distance < lowestDistance) {
+                lowestDistance = distance;
+                closestMatch = {
+                    id: project.Id,
+                    title: combinedTitle.trim(),
+                    distance,
+                };
             }
         }
 
-        return dp[len1][len2]; // The distance is in the bottom-right corner of the matrix
-    };
-
-    // Find the single closest match
-    let closestMatch = null;
-    let lowestDistance = Infinity;
-
-    for (const project of saleProjects) {
-        const combinedTitle = `${project.Title || ''} ${project.KhodroTitle || ''}`;
-        const distance = calculateLevenshteinDistance(searchTerm.toLowerCase(), combinedTitle.toLowerCase());
-
-        console.log("Project:", project, "Combined Title:", combinedTitle, "Levenshtein Distance:", distance);
-
-        if (distance < lowestDistance) {
-            lowestDistance = distance;
-            closestMatch = {
-                id: project.Id,
-                title: combinedTitle.trim(),
-                distance,
-            };
-        }
+        // Return the closest match if any, otherwise null
+        return closestMatch;
     }
 
-    // Return the closest match if any, otherwise null
-    return closestMatch;
-}
 
 
+    async function showItems(data) {
+        console.log(data);
 
-async function showItems(data) {
-    console.log(data);
+        return new Promise((resolve) => {
+            // Validate data
+            if (!data || !data.saleProjects) {
+                console.error('❌ Invalid data format. Expected an object with saleProjects.');
+                resolve(null); // Resolve with null if data is invalid
+                return;
+            }
 
-    return new Promise((resolve) => {
-        // Validate data
-        if (!data || !data.saleProjects) {
-            console.error('❌ Invalid data format. Expected an object with saleProjects.');
-            resolve(null); // Resolve with null if data is invalid
-            return;
-        }
-
-        // Ensure `saleProjects` is always an array
-        const saleProjects = Array.isArray(data.saleProjects)
+            // Ensure `saleProjects` is always an array
+            const saleProjects = Array.isArray(data.saleProjects)
             ? data.saleProjects
             : [data.saleProjects];
 
-        // Ensure a main container exists
-        let mainContainer = document.getElementById('main-container');
-        if (!mainContainer) {
-            console.error('❌ Main container not found. Please create a main container with ID "main-container" first.');
-            resolve(null); // Resolve with null if container is missing
-            return;
-        }
-
-        // Clear previous content in the main container
-        mainContainer.innerHTML = '';
-
-        // If there's only one item, resolve immediately and render it
-        if (saleProjects.length === 1) {
-            console.log('✅ Automatically resolving with the single item:', saleProjects[0]);
-            resolve(saleProjects[0]); // Automatically resolve with the single item
-            return; // Exit the function early
-        }
-
-        // Add search input and button
-        const searchContainer = document.createElement('div');
-        searchContainer.style.display = 'flex';
-        searchContainer.style.marginBottom = '20px';
-
-        const searchInput = document.createElement('input');
-        searchInput.type = 'text';
-        searchInput.placeholder = 'Search items...';
-        searchInput.style.flex = '1';
-        searchInput.style.padding = '10px';
-        searchInput.style.border = '1px solid #ddd';
-        searchInput.style.borderRadius = '4px 0 0 4px';
-
-        const searchButton = document.createElement('button');
-        searchButton.textContent = 'Search';
-        searchButton.style.padding = '10px 20px';
-        searchButton.style.border = 'none';
-        searchButton.style.borderRadius = '0 4px 4px 0';
-        searchButton.style.backgroundColor = '#007BFF';
-        searchButton.style.color = '#fff';
-        searchButton.style.cursor = 'pointer';
-
-        searchContainer.appendChild(searchInput);
-        searchContainer.appendChild(searchButton);
-        mainContainer.appendChild(searchContainer);
-
-        // Create a grid container for items
-        const itemsGrid = document.createElement('div');
-        itemsGrid.id = 'items-grid';
-        itemsGrid.style.display = 'grid';
-        itemsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
-        itemsGrid.style.gap = '20px';
-        mainContainer.appendChild(itemsGrid);
-
-        // Function to render a single item
-
-        // Render all items initially
-        saleProjects.forEach((item) => renderItem(item));
-
-        // Add event listener to the search button
-        searchButton.addEventListener('click', () => {
-            const searchTerm = searchInput.value.trim().toLowerCase();
-
-            // Filter items based on the search term
-            const filteredItems = saleProjects.filter((item) =>
-                item.Title?.toLowerCase().includes(searchTerm)
-            );
-
-            if (filteredItems.length === 1) {
-                renderItem(filteredItems[0]); // Render the single matched item
-            } else if (filteredItems.length > 1) {
-                itemsGrid.innerHTML = ''; // Clear the grid
-                filteredItems.forEach((item) => renderItem(item)); // Render matched items
-            } else {
-                console.log(`⚠️ No items found matching: "${searchTerm}"`);
-                itemsGrid.innerHTML = '<p style="text-align:center;">No items found.</p>'; // Show "No items found" message
+            // Ensure a main container exists
+            let mainContainer = document.getElementById('main-container');
+            if (!mainContainer) {
+                console.error('❌ Main container not found. Please create a main container with ID "main-container" first.');
+                resolve(null); // Resolve with null if container is missing
+                return;
             }
+
+            // Clear previous content in the main container
+            mainContainer.innerHTML = '';
+
+            // If there's only one item, resolve immediately and render it
+            if (saleProjects.length === 1) {
+                console.log('✅ Automatically resolving with the single item:', saleProjects[0]);
+                resolve(saleProjects[0]); // Automatically resolve with the single item
+                return; // Exit the function early
+            }
+
+            // Add search input and button
+            const searchContainer = document.createElement('div');
+            searchContainer.style.display = 'flex';
+            searchContainer.style.marginBottom = '20px';
+
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Search items...';
+            searchInput.style.flex = '1';
+            searchInput.style.padding = '10px';
+            searchInput.style.border = '1px solid #ddd';
+            searchInput.style.borderRadius = '4px 0 0 4px';
+
+            const searchButton = document.createElement('button');
+            searchButton.textContent = 'Search';
+            searchButton.style.padding = '10px 20px';
+            searchButton.style.border = 'none';
+            searchButton.style.borderRadius = '0 4px 4px 0';
+            searchButton.style.backgroundColor = '#007BFF';
+            searchButton.style.color = '#fff';
+            searchButton.style.cursor = 'pointer';
+
+            searchContainer.appendChild(searchInput);
+            searchContainer.appendChild(searchButton);
+            mainContainer.appendChild(searchContainer);
+
+            // Create a grid container for items
+            const itemsGrid = document.createElement('div');
+            itemsGrid.id = 'items-grid';
+            itemsGrid.style.display = 'grid';
+            itemsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
+            itemsGrid.style.gap = '20px';
+            mainContainer.appendChild(itemsGrid);
+
+            // Function to render a single item
+
+            // Render all items initially
+            saleProjects.forEach((item) => renderItem(item));
+
+            // Add event listener to the search button
+            searchButton.addEventListener('click', () => {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+
+                // Filter items based on the search term
+                const filteredItems = saleProjects.filter((item) =>
+                                                          item.Title?.toLowerCase().includes(searchTerm)
+                                                         );
+
+                if (filteredItems.length === 1) {
+                    renderItem(filteredItems[0]); // Render the single matched item
+                } else if (filteredItems.length > 1) {
+                    itemsGrid.innerHTML = ''; // Clear the grid
+                    filteredItems.forEach((item) => renderItem(item)); // Render matched items
+                } else {
+                    console.log(`⚠️ No items found matching: "${searchTerm}"`);
+                    itemsGrid.innerHTML = '<p style="text-align:center;">No items found.</p>'; // Show "No items found" message
+                }
+            });
         });
-    });
-}
+    }
 
 
 
@@ -259,12 +260,22 @@ async function showItems(data) {
 
     async function getCaptcha(cardId){
         const payload = {
+            token: null, // Add token dynamically if needed
             captchaId: cardId,
-            token: "", // Add token dynamically if needed
         };
+        const payloadGetdata = {"crossDomain":true,"headers":{"Content-Type":"application/json;  charset=UTF-8","content":"text"}}
+        const response = await axios.post(getData, payloadGetdata);
+        const payloadJson = JSON.stringify(payload);
+
         try {
+            const headersCaptcha = {
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': `Bearer ${token}`, // Bearer token for authentication
+
+            };
             console.log('🥷 Sending POST request to:', captchaUrl);
-            const response = await axios.post(captchaUrl, payload, { headers });
+            const response = await axios.post(captchaUrl, payloadJson, {crossDomain: !0
+                                                                        ,headers:headersCaptcha});
             return response.data
             console.log('✅ API Response:', response.data);
         } catch (error) {
@@ -373,20 +384,9 @@ async function showItems(data) {
         // Add container to the document body
         mainContainer.appendChild(container);
 
-        // "Send SMS" button
-        const button = document.createElement('button');
-        button.textContent = 'Send Sms!';
-        button.style.padding = '10px 20px';
-        button.style.zIndex = '9999';  // Ensure it appears on top
-        button.style.backgroundColor = '#007BFF';
-        button.style.color = '#fff';
-        button.style.border = 'none';
-        button.style.borderRadius = '5px';
-        button.style.cursor = 'pointer';
-        button.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
 
 
-        mainContainer.appendChild(button);
+
 
         // SMS Input
         const input = document.createElement('input');
@@ -424,45 +424,33 @@ async function showItems(data) {
 
             console.log(dataInit); // Log the received data for debugging
 
+            let lastSmsResponse;
+            try {
+                // Call the sendSms function and get the response
+                const smsResponse = await sendSms();
+                console.log('SMS sent successfully:', smsResponse);
 
-            const submitButton = document.createElement('button');
-            submitButton.textContent = 'Submit';
-            submitButton.style.padding = '10px 20px';
-            submitButton.style.backgroundColor = '#28a745';
-            submitButton.style.color = '#fff';
-            submitButton.style.border = 'none';
-            submitButton.style.borderRadius = '5px';
-            submitButton.style.cursor = 'pointer';
-            submitButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-            submitButton.style.marginTop = '10px';
-            button.addEventListener('click', async () => {
-                let lastSmsResponse;
-                try {
-                    // Call the sendSms function and get the response
-                    const smsResponse = await sendSms();
-                    console.log('SMS sent successfully:', smsResponse);
+                // Extract the mobile number from the SMS response (modify based on your API response)
+                const mobileNumber = smsResponse.mobile || 'default-number'; // Use actual response field
 
-                    // Extract the mobile number from the SMS response (modify based on your API response)
-                    const mobileNumber = smsResponse.mobile || 'default-number'; // Use actual response field
+                // Add a 2-second delay before making the GET request
+                setTimeout(async () => {
+                    try {
+                        // Make a GET request to fetch details for the number
+                        lastSmsResponse = await axios.get(`https://khodro.bot1234.online/api/last-sms/${mobileNumber}`);
+                        console.log('Last SMS Data:', lastSmsResponse.data);
+                        const smsContent = lastSmsResponse.data?.data?.sms || "SMS content not available.";
+                        console.log('Extracted SMS Content:', smsContent);
 
-                    // Add a 2-second delay before making the GET request
-                    setTimeout(async () => {
-                        try {
-                            // Make a GET request to fetch details for the number
-                            lastSmsResponse = await axios.get(`https://khodro.bot1234.online/api/last-sms/${mobileNumber}`);
-                            console.log('Last SMS Data:', lastSmsResponse.data);
-                            const smsContent = lastSmsResponse.data?.data?.sms || "SMS content not available.";
-                            console.log('Extracted SMS Content:', smsContent);
-
-                            // Use a regular expression to extract the numeric code
-                            const codeMatch = smsContent.match(/\d+/); // Matches the first sequence of digits
-                            const numericCode = codeMatch ? codeMatch[0] : "Code not found"; // Get the first match or fallback
-                            smsInputValue = parseInt(numericCode, 10); // Convert numericCode to an integer
-                            input.value = numericCode;
-                            // Optionally display the response on the page
-                        } catch (error) {
-                            console.error('Failed to fetch last SMS data:', error);
-                            document.getElementById('responseDisplay').textContent = `Error: ${
+                        // Use a regular expression to extract the numeric code
+                        const codeMatch = smsContent.match(/\d+/); // Matches the first sequence of digits
+                        const numericCode = codeMatch ? codeMatch[0] : "Code not found"; // Get the first match or fallback
+                        smsInputValue = parseInt(numericCode, 10); // Convert numericCode to an integer
+                        input.value = numericCode;
+                        // Optionally display the response on the page
+                    } catch (error) {
+                        console.error('Failed to fetch last SMS data:', error);
+                        document.getElementById('responseDisplay').textContent = `Error: ${
                     error.response ? error.response.data : error.message
                         }`;
                         }
@@ -474,24 +462,21 @@ async function showItems(data) {
             error.response ? error.response.data : error.message
                 }`;
                 }
-            });
             const filteredRows = dataInit.rows.filter(row => row.label.includes("شیراز"));
 
 
             // Attach click event to Submit button
-            mainContainer.appendChild(submitButton);
             return await new Promise((resolve) => {
-                submitButton.addEventListener('click', () => {
-                    resolve({
-                        captchatoken: captcha.token,
-                        captchaanswer: captchaAnswer,
-                        smsInputValue: smsInputValue,
-                        agencyId: dataInit.idAgencyCode,
-                        IdDueDeliverProg: data.IdDueDeliverProg,
-                        selectedUsage: dataInit.usages[0].value,
-                        selectedColor: dataInit.colors[0].value,
-                        agency:filteredRows[0],
-                    });
+
+                resolve({
+                    captchatoken: captcha.token,
+                    captchaanswer: captchaAnswer,
+                    smsInputValue: smsInputValue,
+                    agencyId: dataInit.idAgencyCode,
+                    IdDueDeliverProg: data.IdDueDeliverProg,
+                    selectedUsage: dataInit.usages[0].value,
+                    selectedColor: dataInit.colors[0].value,
+                    agency:filteredRows[0],
                 });
             });
         } catch (error) {
