@@ -8,6 +8,7 @@
 // @icon         https://esale.ikd.ir/logo.png
 // @grant        GM_addStyle
 // @require      https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js
+// @require      https://code.jquery.com/jquery-3.6.0.min.js
 
 // ==/UserScript==
 
@@ -16,7 +17,7 @@
     //variables
     const targetKey = 'SaleInternet';
     const apiUrlfetchitems = 'https://esale.ikd.ir/api/sales/getSaleProjects';
-    const captchaUrl = 'https://esale.ikd.ir/api/users/getCaptchaLogin';
+    const captchaUrl = 'https://esale.ikd.ir/api/esales/getCaptchaOrder';
     const orderInit= 'https://esale.ikd.ir/api/esales/readSefareshInfo';
     const smsApi = 'https://esale.ikd.ir/api/users/sendSmsOrder';
     const addOrderInit ='https://esale.ikd.ir/api/esales/addSefaresh';
@@ -40,6 +41,7 @@
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}` // Bearer token for authentication
     };
+
     //maincontain
     const container = document.createElement('div');
     container.id = 'main-container';
@@ -250,34 +252,38 @@
             // Return the response data
             return response.data;
         } catch (error) {
-            // Handle errors
-            console.error('Error:', error.response ? error.response.data : error.message);
-
-            // Optionally, rethrow the error for handling upstream
-            throw error;
+console.log("test")
         }
     }
-
+    class Captcha {
+        constructor(captchaName, token, captchaId, apiId) {
+            this.captchaName = captchaName;
+            this.token = token;
+            this.captchaId = captchaId;
+            this.apiId = apiId;
+        }
+    }
     async function getCaptcha(cardId){
-        const payload = {
-            token: null, // Add token dynamically if needed
-            captchaId: cardId,
-        };
-        const payloadGetdata = {"crossDomain":true,"headers":{"Content-Type":"application/json;  charset=UTF-8","content":"text"}}
-        const response = await axios.post(getData, payloadGetdata);
-        const payloadJson = JSON.stringify(payload);
 
+
+        const payload = `{"captchaName": "Order","token": "","captchaId": ${cardId},"apiId": "06290E83-E12E-4910-9C12-942F78131CE6"}`;
+        // Step 3: Create an instance of the class using the dictionary
         try {
             const headersCaptcha = {
-                'Content-Type': 'application/json; charset=UTF-8',
-                'Authorization': `Bearer ${token}`, // Bearer token for authentication
-
+                'Content-Type': 'application/json;   charset=UTF-8', // Proper JSON content type
+                'Authorization': `Bearer ${token}`, // Add Bearer token for authentication
             };
+
+            let response; // Declare the variable to store the response
+
             console.log('🥷 Sending POST request to:', captchaUrl);
-            const response = await axios.post(captchaUrl, payloadJson, {crossDomain: !0
-                                                                        ,headers:headersCaptcha});
-            return response.data
-            console.log('✅ API Response:', response.data);
+            response =await axios.post(captchaUrl, payload, {
+                headers: headersCaptcha,
+                withCredentials: true, // Ensures cookies are sent along with the request
+            })
+         
+            console.log('✅ API Response:', response);
+               return response.data
         } catch (error) {
             console.error('❌ API Request Failed:', error.response ? error.response.data : error.message);
         }
@@ -431,7 +437,7 @@
                 console.log('SMS sent successfully:', smsResponse);
 
                 // Extract the mobile number from the SMS response (modify based on your API response)
-                const mobileNumber = smsResponse.mobile || 'default-number'; // Use actual response field
+                const mobileNumber = smsResponse.mobile || '09017670855'; // Use actual response field
 
                 // Add a 2-second delay before making the GET request
                 setTimeout(async () => {
@@ -452,33 +458,37 @@
                         console.error('Failed to fetch last SMS data:', error);
                         document.getElementById('responseDisplay').textContent = `Error: ${
                     error.response ? error.response.data : error.message
-                        }`;
-                        }
-                    }, 3000); // Delay of 2 seconds (2000ms)
+                    }`;
+                    }
+                }, 3000); // Delay of 2 seconds (2000ms)
 
-                } catch (error) {
-                    console.error('Failed to send SMS:', error);
-                    document.getElementById('responseDisplay').textContent = `Error: ${
+            } catch (error) {
+                console.error('Failed to send SMS:', error);
+                document.getElementById('responseDisplay').textContent = `Error: ${
             error.response ? error.response.data : error.message
-                }`;
-                }
+            }`;
+            }
             const filteredRows = dataInit.rows.filter(row => row.label.includes("شیراز"));
 
+            // Return one random item from the filtered rows
+            const randomRow = filteredRows[Math.floor(Math.random() * filteredRows.length)];
 
             // Attach click event to Submit button
             return await new Promise((resolve) => {
-
-                resolve({
-                    captchatoken: captcha.token,
-                    captchaanswer: captchaAnswer,
-                    smsInputValue: smsInputValue,
-                    agencyId: dataInit.idAgencyCode,
-                    IdDueDeliverProg: data.IdDueDeliverProg,
-                    selectedUsage: dataInit.usages[0].value,
-                    selectedColor: dataInit.colors[0].value,
-                    agency:filteredRows[0],
-                });
+                setTimeout(() => {
+                    resolve({
+                        captchatoken: captcha.token,
+                        captchaanswer: captchaAnswer,
+                        smsInputValue: smsInputValue,
+                        agencyId: dataInit.idAgencyCode,
+                        IdDueDeliverProg: data.IdDueDeliverProg,
+                        selectedUsage: dataInit.usages[0].value,
+                        selectedColor: dataInit.colors[0].value,
+                        agency: randomRow,
+                    });
+                }, 5000); // Delay of 5 seconds (5000 ms)
             });
+
         } catch (error) {
             // Handle errors
             console.error('Error fetching data:', error);
@@ -672,13 +682,13 @@
                     console.log('✅ Order initialized:', init);
 
                     // Attempt to add the order
-                    const response = await AddOrderInit(init);
-                    if (response && response.identity) {
-                        console.log('🎉 Order successfully added:', response);
-                        success = true; // Exit the loop when order is successfully added
-                    } else {
-                        console.log('⚠️ Adding order failed. Retrying...');
-                    }
+                                  const response = await AddOrderInit(init);
+                                  if (response && response.identity) {
+                                  console.log('🎉 Order successfully added:', response);
+                                success = true; // Exit the loop when order is successfully added
+                          } else {
+                            console.log('⚠️ Adding order failed. Retrying...');
+                       }
                 } catch (error) {
                     console.error('❌ Error in main loop:', error.message || error);
                 }

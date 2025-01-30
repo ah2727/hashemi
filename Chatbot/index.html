@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fa">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- عنوان صفحه -->
+    <title>صفحه اصلی</title>
+  </head>
+  <body>
+    <!-- دکمه و فرم برای وارد کردن اطلاعات -->
+    <div class="white-box">
+      <input type="text" placeholder="نام کاربری" />
+      <input type="password" placeholder="رمز عبور" />
+      <input type="text" placeholder="مدل انتخابی" />
+      <div class="buttons">
+        <!-- دکمه برای باز کردن پاپ‌آپ -->
+        <button class="register-btn" id="open-popup">حالت تک صفحه ای</button>
+        <!-- دکمه حالت دستی -->
+        <button class="edit-btn">حالت دستی</button>
+      </div>
+    </div>
+
+    <!-- پاپ‌آپ برای نمایش اطلاعات بیشتر -->
+    <div class="popup" id="popup">
+      <div class="popup-content">
+        <header>
+          <!-- بخش هدر پاپ‌آپ -->
+          <div class="header-container">
+            <div class="user-icon">
+              <img src="assets/images/user.png" alt="نام کاربری" />
+              <span>نام کاربری</span>
+            </div>
+            <div class="logo">
+              <img src="assets/images/logo.png" alt="لوگو" />
+            </div>
+            <div class="clock">
+              <div id="clock">15:13</div>
+              <img src="assets/images/clock.png" alt="ساعت" />
+            </div>
+            <!-- دکمه بستن پاپ‌آپ -->
+            <button class="close-popup" id="close-popup">
+              <img src="assets/images/x.png" alt="بستن" />
+            </button>
+          </div>
+        </header>
+
+        <!-- محتوای اصلی پاپ‌آپ -->
+        <main>
+          <section>
+            <!-- فرم اطلاعات ثبت نام -->
+            <div class="white-box register-box">
+              <h3>اطلاعات ثبت نام</h3>
+              <input type="text" placeholder="نام کاربری" />
+              <input type="password" placeholder="رمز عبور" />
+              <div class="buttons">
+                <!-- دکمه ثبت نام -->
+                <button class="register-btn">ثبت نام</button>
+                <!-- دکمه ویرایش اطلاعات -->
+                <button class="edit-btn">ویرایش</button>
+              </div>
+            </div>
+            <!-- دکمه جستجو -->
+            <button class="search-button">
+              <p>جست و جو</p>
+              <img src="./assets/images/search.png" alt="آیکون جستجو" />
+            </button>
+          </section>
+
+          <!-- نمایش آیتم‌های پیدا شده -->
+          <div class="items-box">
+            <h3>آیتم‌های پیدا شده</h3>
+            <div class="items-grid">
+              <!-- دکمه‌های آیتم‌ها -->
+              <button class="item">آیتم شماره ۱</button>
+              <button class="item">آیتم شماره ۲</button>
+              <button class="item">آیتم شماره ۳</button>
+              <button class="item">آیتم شماره ۴</button>
+              <button class="item">آیتم شماره ۵</button>
+              <button class="item">آیتم شماره ۶</button>
+            </div>
+          </div>
+
+          <section>
+            <!-- بخش پیام‌ها -->
+            <div class="white-box messages-box">
+              <h3>پیام‌ها</h3>
+              <div class="messages-content">
+                <p class="no-message-exist">هیچ پیامی وجود ندارد.</p>
+              </div>
+            </div>
+
+            <!-- بخش CAPTCHA و SMS -->
+            <div class="white-box captcha-box">
+              <div class="captcha-image">
+                <img src="assets/images/captcha.png" alt="کد CAPTCHA" />
+              </div>
+              <input type="text" placeholder="کد امنیتی رو وارد کنید" />
+              <div class="sms-section">
+                <input type="text" placeholder="کد SMS" />
+                <button class="sms-btn">دریافت کد پیامکی</button>
+              </div>
+              <!-- دکمه ثبت سفارش -->
+              <button class="submit-btn">ثبت سفارش</button>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- فایل جاوااسکریپت -->
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,477 @@
+/* وارد کردن فونت IRANSans */
+@import './assets/fonts/IRANSans.css';
+
+/* تعریف رنگ‌ها به‌صورت متغیر */
+:root {
+  --dark-blue: #1b3a4b;
+  --orange: #f4a261;
+  --dark-gray: #333333;
+  --light-gray: #e5e5e5;
+}
+
+/* تنظیم فونت عمومی برای تمام عناصر */
+* {
+  font-family: 'IRANSans';
+}
+
+/* تنظیمات پایه برای صفحه */
+body {
+  margin: 0;
+}
+
+/* هدر صفحه */
+header {
+  background-color: var(--dark-gray);
+  color: white;
+  padding: 4px 72px;
+}
+
+/* استایل برای بخش اصلی صفحه */
+main {
+  padding: 40px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* استایل برای بخش‌های داخل main */
+section {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+}
+
+/* استایل برای دکمه‌ها */
+button {
+  border: none;
+  cursor: pointer;
+}
+
+/* استایل ورودی‌ها (input) */
+input {
+  width: 90%;
+  background-color: transparent;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #9d9d9d;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+/* استایل زمانی که ورودی‌ها فوکوس دارند */
+input:focus {
+  outline: none;
+}
+
+/* تنظیمات هدر داخلی */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* استایل لوگو */
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out;
+}
+
+.logo:hover {
+  transform: scale(1.09); /* افکت زوم در زمان هاور */
+}
+
+.logo img {
+  height: 60px;
+}
+
+/* تنظیمات بخش راست هدر */
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+/* استایل ساعت در هدر */
+.clock {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clock img {
+  height: 40px;
+  width: 40px;
+}
+
+/* استایل آیکن کاربر */
+.user-icon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-icon img {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+/* استایل جعبه سفید در بخش ثبت‌نام */
+.white-box {
+  background-color: var(--light-gray);
+  padding: 8px 12px;
+  border-radius: 8px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* عنوان جعبه ثبت‌نام */
+.register-box h3 {
+  margin: 0 0 15px;
+}
+
+/* استایل دکمه‌های داخل جعبه ثبت‌نام */
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.buttons button {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* دکمه ویرایش */
+.edit-btn {
+  background-color: var(--dark-gray);
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* دکمه ثبت‌نام */
+.register-btn {
+  background-color: var(--orange);
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* استایل دکمه جستجو */
+.search-button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: var(--orange);
+  padding: 25px 29px;
+  border-radius: 8px;
+  color: var(--light-gray);
+}
+
+.searching {
+  background-color: #ff7f50; /* رنگ جدید دکمه */
+  color: white;
+  border: 1px solid #ff7f50;
+}
+
+.search-button img {
+  width: 40px;
+  height: 40px;
+}
+
+.search-button p {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* استایل باکس پیام‌ها */
+.messages-box {
+  height: 324px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages-box h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--dark-gray);
+}
+
+.messages-content {
+  max-height: 300px;
+  flex-grow: 1;
+  overflow: auto;
+  padding-right: 10px;
+  margin-top: 10px;
+}
+
+/* استایل پیام‌ها */
+.message {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.message img {
+  height: 30px;
+  width: 30px;
+}
+
+.message span {
+  font-size: 14px;
+  color: #333;
+  text-align: right;
+}
+
+/* استایل تصویر کپچا */
+.captcha-image img {
+  width: 100%;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+/* استایل زمانی که پیامی وجود ندارد */
+.no-message-exist {
+  margin-top: 120px;
+  color: #919191;
+}
+
+/* استایل بخش کد پیامکی */
+.sms-section {
+  display: flex;
+  gap: 5px;
+}
+
+/* دکمه دریافت کد پیامکی */
+.sms-btn {
+  background-color: var(--dark-gray);
+  color: white;
+  padding: 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* دکمه ثبت سفارش */
+.submit-btn {
+  background-color: var(--orange);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* استایل برای باکس‌های آیتم‌ها */
+.items-box {
+  background-color: var(--light-gray);
+  padding: 15px;
+  border-radius: 8px;
+  width: 95%;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin: auto;
+}
+
+.items-box h3 {
+  margin: 0 0 10px;
+  color: var(--dark-gray);
+}
+
+/* استایل گرید آیتم‌ها */
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+/* استایل هر آیتم */
+.item {
+  background-color: white;
+  border: 1px solid var(--dark-gray);
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+/* استایل آیتم انتخاب شده */
+.item.selected {
+  background-color: var(--dark-gray);
+  color: var(--light-gray);
+}
+
+.item:hover {
+  background-color: #919191;
+}
+
+/* استایل پاپ‌آپ */
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding-top: 20px;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* محتوای پاپ‌آپ */
+.popup-content {
+  direction: rtl;
+  background-color: var(--dark-blue);
+  border-radius: 8px;
+  width: 80%;
+  max-height: 90%;
+  overflow: auto;
+  margin: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+}
+
+/* دکمه بستن پاپ‌آپ */
+.popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: transparent;
+  border: none;
+  color: var(--dark-gray);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* نمایش پاپ‌آپ */
+.popup.show {
+  display: flex;
+}
+
+/* دکمه بستن پاپ‌آپ با طراحی دایره‌ای */
+.close-popup {
+  background: var(--light-gray);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 4px;
+  position: absolute;
+  top: 15px;
+  right: 25px;
+  z-index: 10;
+}
+
+.close-popup img {
+  width: 30px;
+  height: 30px;
+}
+
+/* ریسپانسیو برای نمایش در صفحات کوچک‌تر */
+@media (max-width: 600px) {
+  main {
+    padding: 24px;
+  }
+
+  header {
+    padding: 8px 24px;
+  }
+
+  section {
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  main section:last-of-type {
+    flex-direction: column-reverse;
+  }
+
+  .close-popup {
+    top: 5px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+
+  .clock {
+    display: none;
+  }
+
+  .logo img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .items-grid {
+    max-height: 150px;
+    overflow: auto;
+    padding: 8px;
+  }
+
+  .messages-box {
+    max-height: 150px;
+  }
+
+  .messages-content {
+    max-height: 150px;
+  }
+
+  .white-box,
+  .popup-content {
+    width: 90%;
+  }
+
+  .popup-content {
+    bottom: 0;
+  }
+
+  .items-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .popup {
+    align-items: flex-start;
+    padding-top: 50px;
+  }
+}
