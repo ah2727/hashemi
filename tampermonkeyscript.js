@@ -25,6 +25,7 @@
     const getUrl = "https://sapi.iranecar.com/api/v1/Order/GetActiveReservedUrl";
     const checkresult = "https://sapi.iranecar.com/api/v1/bank/checkResult";
     const getreverseurl = "https://sapi.iranecar.com/api/v1/Order/GetActiveReservedUrl";
+    const captchaSolveUrl = "http://saipa.bot1234.online/predict"
     const mainContainer = createMainContainer();
     // Function to create the container for login and car items
     function createMainContainer() {
@@ -57,7 +58,7 @@
         const cookies = document.cookie.split('; ');
         for (let cookie of cookies) {
             const [key, value] = cookie.split('=');
-            if (key === 'AuthUser') {
+            if (key === 'token') {
                 return true; // User is logged in
             }
         }
@@ -114,12 +115,45 @@
             console.error('Error fetching captcha:', error);
         }
     }
+    async function solveCaptcha(img){
+        try {
+            // Fetch the blob from the provided blob URL
+            const response = await fetch(img);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch blob from URL: ${img}`);
+            }
+            const blob = await response.blob();
+
+            // Create a File object from the blob (naming it "image.jpg")
+            const file = new File([blob], "image.jpg", { type: blob.type });
+
+            // Prepare FormData and append the file with key "image"
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Send a POST request to the Flask endpoint
+            const flaskResponse = await fetch(captchaSolveUrl, {
+                method: 'POST',
+                body: formData,
+            });
+
+            // Parse the JSON response from Flask
+            const result = await flaskResponse.json();
+            return result;
+        } catch (error) {
+            console.error('Error sending blob image:', error);
+            throw error;
+        }
+    }
+
+
     // Function to create or update the captcha display
-    function updateCaptcha(imageUrl, tokenId) {
+    async function updateCaptcha(imageUrl, tokenId) {
         if (isLoggedIn) {
             mainContainer.innerHTML = '<p>You are already logged in!</p>';
             return;
         }
+        const solvedcaptcha =await solveCaptcha(imageUrl)
         const logindiv = document.createElement("div");
         logindiv.style.display="grid";
 
@@ -130,12 +164,15 @@
         const fields = [
             { id: 'username-input', placeholder: 'Enter username', type: 'text' },
             { id: 'password-input', placeholder: 'Enter password', type: 'password' },
-            { id: 'captcha-input', placeholder: 'Enter captcha', type: 'text' },
+            { id: 'captcha-input', placeholder: 'Enter captcha', type: 'text',value:solvedcaptcha.img_text },
         ];
 
         fields.forEach(field => {
             const input = document.createElement('input');
             input.type = field.type;
+            if(field.value){
+                input.value = field.value;
+            }
             input.placeholder = field.placeholder;
             input.style.height = '40px';
             input.style.width = '100%';
